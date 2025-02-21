@@ -1,4 +1,5 @@
-Credit Loan Management Portal
+FINTACK: DIGITALIZING CREDIT LOAN MANAGEMENT
+
 Overview
 The Credit Loan Management Portal is a full-stack web application designed to help users monitor their credit scores, manage multiple loan accounts, and generate credit reports. It leverages Machine Learning (ML) for credit scoring, Natural Language Processing (NLP) for sentiment analysis, and Robotic Process Automation (RPA) for automation tasks such as sending payment reminders and generating reports.
 
