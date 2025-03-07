@@ -42,22 +42,19 @@ Frontend
 Setup Instructions
 Backend Setup
 1.	Clone the repository: 
-2.	git clone https://github.com/your-username/credit-loan-management.git
-3.	cd credit-loan-management/credit_project
-4.	Create a virtual environment and install dependencies: 
-5.	python -m venv venv
-6.	On Windows use `venv\Scripts\activate`
-7.	Apply migrations and run the server: 
-8.	python manage.py migrate
-9.	python manage.py runserver
+2.	cd credit_management-main/
+3.	remove restrictions by running 'Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser'
+4.	run 'python manage.py runserver'
 
 Frontend Setup
 1.	Navigate to the frontend directory: 
-2.	cd ../credit_frontend
-3.	Install dependencies: 
-4.	npm install
-5.	Start the React development server: 
-6.	npm run dev
+2.	cd credit_management/credit_frontend
+3.  Ensure Node.js and npm are Installed
+4.  run node -v, and npm -v. If these commands return version numbers, Node.js and npm are installed.
+5.	if not there, navigate cd credit_management/credit_frontend and run npm install, and install node.js as well.
+6.	If npm install doesn’t fix it, install Vite manually: 'npm install vite --save-dev'
+7. npm run dev
+8. click on the host link : http://localhost:5173/
 
 
 Future Enhancements
