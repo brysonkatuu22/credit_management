@@ -47,6 +47,9 @@ Backend Setup
 4.	run 'python manage.py runserver'
 
 Frontend Setup
+
+Open a new terminal, do not terminate the backend terminal started above
+
 1.	Navigate to the frontend directory: 
 2.	cd credit_management/credit_frontend
 3.  Ensure Node.js and npm are Installed
