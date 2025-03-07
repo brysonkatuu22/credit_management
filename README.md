@@ -43,18 +43,17 @@ Setup Instructions
 Backend Setup
 1.	Clone the repository: 
 2.	git clone https://github.com/your-username/credit-loan-management.git
-3.	cd credit-loan-management/backend
+3.	cd credit-loan-management/credit_project
 4.	Create a virtual environment and install dependencies: 
 5.	python -m venv venv
-6.	source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-7.	pip install -r requirements.txt
-8.	Apply migrations and run the server: 
-9.	python manage.py migrate
-10.	python manage.py runserver
+6.	On Windows use `venv\Scripts\activate`
+7.	Apply migrations and run the server: 
+8.	python manage.py migrate
+9.	python manage.py runserver
 
 Frontend Setup
 1.	Navigate to the frontend directory: 
-2.	cd ../frontend
+2.	cd ../credit_frontend
 3.	Install dependencies: 
 4.	npm install
 5.	Start the React development server: 
