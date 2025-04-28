@@ -1,7 +1,9 @@
 from rest_framework import status, generics, permissions
 from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
 from .serializers import UserSerializer
 
 User = get_user_model()
@@ -31,3 +33,34 @@ class RegisterView(generics.CreateAPIView):
             },
             status=status.HTTP_201_CREATED
         )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def verify_password(request):
+    """
+    Verify a user's password for security confirmation.
+    Used for sensitive operations like generating reports.
+    """
+    user = request.user
+    password = request.data.get('password')
+
+    if not password:
+        return Response(
+            {"detail": "Password is required."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Check if the provided password is correct
+    auth_user = authenticate(username=user.email, password=password)
+
+    if auth_user is None:
+        return Response(
+            {"detail": "Incorrect password."},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
+
+    return Response(
+        {"detail": "Password verified successfully."},
+        status=status.HTTP_200_OK
+    )

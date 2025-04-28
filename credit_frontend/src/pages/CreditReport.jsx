@@ -1,13 +1,41 @@
 // File: src/pages/CreditReport.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const CreditReport = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [message, setMessage] = useState("");
   const [reportUrl, setReportUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isAutomated, setIsAutomated] = useState(false);
+  const reportButtonRef = useRef(null);
+  const downloadButtonRef = useRef(null);
+
+  // Check if this is an automated navigation from the report prompt
+  useEffect(() => {
+    const automationActive = sessionStorage.getItem("reportAutomationActive");
+    if (automationActive === "true") {
+      setIsAutomated(true);
+
+      // Simulate clicking the generate report button after a delay
+      const timer = setTimeout(() => {
+        if (reportButtonRef.current) {
+          reportButtonRef.current.scrollIntoView({ behavior: "smooth" });
+
+          // After scrolling, wait a moment and then click the button
+          setTimeout(() => {
+            if (reportButtonRef.current) {
+              reportButtonRef.current.click();
+            }
+          }, 1500);
+        }
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -23,7 +51,7 @@ const CreditReport = () => {
     }
 
     setIsLoading(true);
-    
+
     try {
       const response = await axios.post(
         "http://127.0.0.1:8000/api/credit-report/report/request/",
@@ -37,9 +65,39 @@ const CreditReport = () => {
 
       setMessage(response.data.message);
       setReportUrl(response.data.report_url);
+
+      // If this is an automated flow, automatically download the report
+      if (isAutomated && response.data.report_url) {
+        // Wait a moment before triggering the download
+        setTimeout(() => {
+          if (downloadButtonRef.current) {
+            downloadButtonRef.current.scrollIntoView({ behavior: "smooth" });
+
+            // After scrolling, wait a moment and then click the download button
+            setTimeout(() => {
+              if (downloadButtonRef.current) {
+                downloadButtonRef.current.click();
+
+                // Clear the automation flag after completion
+                sessionStorage.removeItem("reportAutomationActive");
+
+                // Navigate back to dashboard after a delay
+                setTimeout(() => {
+                  navigate("/dashboard");
+                }, 3000);
+              }
+            }, 1500);
+          }
+        }, 1000);
+      }
     } catch (error) {
       console.error("Error generating report:", error);
       setMessage("Failed to generate report.");
+
+      if (isAutomated) {
+        // Clear the automation flag if there was an error
+        sessionStorage.removeItem("reportAutomationActive");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -57,7 +115,7 @@ const CreditReport = () => {
     <div className="min-h-screen relative">
       {/* Background with pattern */}
       <div className="absolute inset-0 bg-blue-50 opacity-70">
-        <div className="absolute inset-0" style={{ 
+        <div className="absolute inset-0" style={{
           backgroundImage: `
             radial-gradient(circle at 25px 25px, rgba(18, 0, 213, 0.1) 2%, transparent 0%),
             radial-gradient(circle at 75px 75px, rgba(16, 123, 245, 0.1) 2%, transparent 0%)
@@ -73,8 +131,8 @@ const CreditReport = () => {
       <div className="relative min-h-screen flex flex-col">
         {/* Navigation Bar with Red Logout Button */}
         <nav className="bg-gradient-to-b from-blue-600 to-blue-800 shadow-lg p-4 flex justify-between items-center rounded-b-lg border-b-4 border-blue-900">
-          <h1 
-            className="text-xl font-bold text-white drop-shadow-lg cursor-pointer" 
+          <h1
+            className="text-xl font-bold text-white drop-shadow-lg cursor-pointer"
             onClick={() => navigate("/dashboard")}
           >
             Credit Portal
@@ -91,7 +149,7 @@ const CreditReport = () => {
             >
               Credit Report
             </button>
-            <button 
+            <button
               className="text-blue-900 bg-white px-3 py-2 rounded-md shadow-md hover:bg-gray-200 transition-colors duration-200"
               onClick={() => navigate("/learn-more")}
             >
@@ -129,7 +187,7 @@ const CreditReport = () => {
                 </svg>
               </div>
             </div>
-            
+
             <div className="p-8">
               <h2 className="text-4xl font-bold mb-4 text-blue-800 text-center">Get Your Loan Report Today</h2>
               <p className="text-gray-800 mb-8 text-center text-lg font-semibold">
@@ -160,11 +218,12 @@ const CreditReport = () => {
 
               <div className="flex justify-center mb-8">
                 <button
+                  ref={reportButtonRef}
                   onClick={handleRequestReport}
                   disabled={isLoading}
                   className={`bg-gradient-to-r from-blue-500 to-blue-700 text-white px-8 py-3 rounded-lg transition duration-300 text-lg font-medium shadow-md flex items-center ${
                     isLoading ? "opacity-75 cursor-not-allowed" : "hover:shadow-lg transform hover:-translate-y-1"
-                  }`}
+                  } ${isAutomated ? "ring-4 ring-blue-300 ring-opacity-50 animate-pulse" : ""}`}
                 >
                   {isLoading ? (
                     <>
@@ -190,10 +249,13 @@ const CreditReport = () => {
                 <div className="mt-6 text-center bg-blue-50 p-6 rounded-lg border border-blue-100 animate-fadeIn shadow-inner">
                   <h4 className="text-blue-800 font-semibold mb-2">Your report is ready!</h4>
                   <a
+                    ref={downloadButtonRef}
                     href={`http://127.0.0.1:8000${reportUrl}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center space-x-2 font-medium text-white bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg transition duration-200 shadow-md group"
+                    className={`inline-flex items-center justify-center space-x-2 font-medium text-white bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg transition duration-200 shadow-md group ${
+                      isAutomated ? "ring-4 ring-blue-300 ring-opacity-50 animate-pulse" : ""
+                    }`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
@@ -203,7 +265,7 @@ const CreditReport = () => {
                 </div>
               )}
             </div>
-            
+
             {/* Footer info */}
             <div className="bg-gray-50 p-4 text-center text-sm text-gray-500 border-t border-gray-200">
               <p>Your data is encrypted and secure. We never share your information with third parties.</p>
