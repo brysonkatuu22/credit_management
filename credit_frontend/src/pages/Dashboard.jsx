@@ -1,13 +1,33 @@
 // File: src/pages/Dashboard.jsx
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import ReportPrompt from "../components/ReportPrompt";
+import { Container, Row, Col, Card, Button, Alert } from 'react-bootstrap';
+import { FiBarChart2, FiDollarSign, FiFileText, FiTrendingUp, FiRefreshCw } from 'react-icons/fi';
+import SimplifiedFinancialForm from "../components/SimplifiedFinancialForm";
+import CreditScoreDisplay from "../components/CreditScoreDisplay";
+import Header from "../components/Header";
+import '../styles/darkMode.css';
+import { synchronizeData, initializeAllData } from "../services/dataService";
+import {
+  userData$,
+  financialProfile$,
+  creditScore$,
+  loans$,
+  dashboardMetrics$
+} from "../services/dataService";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-  const [showReportPrompt, setShowReportPrompt] = useState(false);
-  const [hasShownPrompt, setHasShownPrompt] = useState(false);
+  const [creditScore, setCreditScore] = useState(null);
+  const [userName, setUserName] = useState('');
+  const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
+  const [error, setError] = useState('');
+  const [dashboardMetrics, setDashboardMetrics] = useState({
+    activeLoans: 0,
+    creditReportsGenerated: 0,
+    scoreChange: 'N/A'
+  });
 
   useEffect(() => {
     if (!token) {
@@ -15,84 +35,260 @@ const Dashboard = () => {
       return;
     }
 
-    // Check if this is a fresh login (using session storage)
-    const hasPromptBeenShown = sessionStorage.getItem("reportPromptShown");
-    if (!hasPromptBeenShown && !hasShownPrompt) {
-      // Wait a moment after login before showing the prompt
-      const timer = setTimeout(() => {
-        setShowReportPrompt(true);
-        setHasShownPrompt(true);
-        sessionStorage.setItem("reportPromptShown", "true");
-      }, 1000);
+    // Subscribe to user data observable
+    const userDataSubscription = userData$.subscribe(userData => {
+      if (userData) {
+        if (userData.name) {
+          setUserName(userData.name);
+        } else if (userData.email) {
+          // Use email as fallback
+          setUserName(userData.email.split('@')[0]);
+        }
+      }
+    });
 
-      return () => clearTimeout(timer);
+    // Subscribe to credit score observable
+    const creditScoreSubscription = creditScore$.subscribe(score => {
+      if (score) {
+        setCreditScore(score);
+      }
+    });
+
+    // Subscribe to loans observable
+    const loansSubscription = loans$.subscribe(loansData => {
+      // Update active loans count
+      if (loansData && Array.isArray(loansData)) {
+        // Count only active loans
+        const activeLoans = loansData.filter(loan => loan.is_active).length;
+        // We could update a state variable here if needed
+      }
+    });
+
+    // Subscribe to dashboard metrics observable
+    const dashboardMetricsSubscription = dashboardMetrics$.subscribe(metrics => {
+      if (metrics) {
+        setDashboardMetrics(metrics);
+      }
+    });
+
+    // Initialize all data on component mount - this is the central feeding point
+    initializeAllData().catch(error => {
+      console.error("Error initializing data:", error);
+      setError("Failed to load all financial data. Please try again.");
+    });
+
+    // Check dark mode
+    setDarkMode(localStorage.getItem('darkMode') === 'true');
+
+    // Cleanup subscriptions on component unmount
+    return () => {
+      userDataSubscription.unsubscribe();
+      creditScoreSubscription.unsubscribe();
+      loansSubscription.unsubscribe();
+      dashboardMetricsSubscription.unsubscribe();
+    };
+  }, [token, navigate]);
+
+  const handleCreditScoreCalculated = (scoreData) => {
+    // Update the credit score state and also update the observable
+    setCreditScore(scoreData);
+
+    // Update the credit score in the observable to ensure it's available throughout the app
+    creditScore$.next(scoreData);
+
+    // Log the new score for debugging
+    console.log('Credit score updated in Dashboard:', scoreData.score);
+
+    // Clear any cached data hash to ensure future calculations use fresh data
+    localStorage.removeItem('creditScoreDataHash');
+
+    // Scroll to the credit score display
+    if (scoreData) {
+      setTimeout(() => {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }, 500);
     }
-  }, [token, navigate, hasShownPrompt]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    sessionStorage.removeItem("reportPromptShown");
-    navigate("/");
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-white">
-      {/* 🔹 Top Navigation Bar */}
-      <nav className="bg-gradient-to-b from-blue-600 to-blue-800 shadow-lg p-4 flex justify-between items-center rounded-b-lg border-b-4 border-blue-900">
-        <h1
-          className="text-xl font-bold text-white drop-shadow-lg cursor-pointer"
-          onClick={() => navigate("/dashboard")}
-        >
-          Credit Portal
-        </h1>
-        <div className="space-x-6">
-          <Link to="/loan-accounts" className="text-blue-900 bg-white px-3 py-2 rounded-md shadow-md hover:bg-gray-200">Loan Accounts</Link>
-          <Link to="/credit-report" className="text-blue-900 bg-white px-3 py-2 rounded-md shadow-md hover:bg-gray-200">Credit Report</Link>
-          <Link to="/learn-more" className="text-blue-900 bg-white px-3 py-2 rounded-md shadow-md hover:bg-gray-200">Learn More</Link>
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition drop-shadow-lg">
-            Logout
-          </button>
+    <div className={`min-h-screen flex flex-col ${darkMode ? 'dark-mode' : ''}`}>
+      {/* Header with Navigation */}
+      <Header />
+
+      <Container className="py-4 px-4">
+        {/* Welcome Message */}
+        <div className="mb-4 bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-5 rounded-lg shadow-lg">
+          <h2 className="text-3xl font-bold">
+            {userName ? `Welcome, ${userName}!` : 'Welcome to Your Financial Dashboard!'}
+          </h2>
+          <p className="mt-2 opacity-90">
+            Track your credit score, manage loan accounts, and generate credit reports to improve your financial health.
+          </p>
+
+          {/* Quick Stats */}
+          <Row className="mt-4">
+            <Col md={3} sm={6} className="mb-3 mb-md-0">
+              <div className="bg-blue-600 bg-opacity-40 p-3 pb-4 rounded-lg shadow-sm">
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <div className="text-sm text-white font-medium">Current Credit Score</div>
+                    <div className="text-xl font-bold text-white">{creditScore ? creditScore.score : '---'}</div>
+                    <div className="text-xs text-white opacity-75 mt-1">Your latest calculated score</div>
+                  </div>
+                  <div className="bg-blue-500 bg-opacity-50 p-2 rounded-full">
+                    <FiBarChart2 size={20} className="text-white" />
+                  </div>
+                </div>
+              </div>
+            </Col>
+            <Col md={3} sm={6} className="mb-3 mb-md-0">
+              <div className="bg-green-600 bg-opacity-40 p-3 pb-4 rounded-lg shadow-sm">
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <div className="text-sm text-white font-medium">Active Loans</div>
+                    <div className="text-xl font-bold text-white">{dashboardMetrics.activeLoans}</div>
+                    <div className="text-xs text-white opacity-75 mt-1">From all institutions</div>
+                  </div>
+                  <div className="bg-green-500 bg-opacity-50 p-2 rounded-full">
+                    <FiDollarSign size={20} className="text-white" />
+                  </div>
+                </div>
+              </div>
+            </Col>
+            <Col md={3} sm={6} className="mb-3 mb-md-0">
+              <div className="bg-purple-600 bg-opacity-40 p-3 pb-4 rounded-lg shadow-sm">
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <div className="text-sm text-white font-medium">Credit Reports</div>
+                    <div className="text-xl font-bold text-white">{dashboardMetrics.creditReportsGenerated}</div>
+                    <div className="text-xs text-white opacity-75 mt-1">Generated this month</div>
+                  </div>
+                  <div className="bg-purple-500 bg-opacity-50 p-2 rounded-full">
+                    <FiFileText size={20} className="text-white" />
+                  </div>
+                </div>
+              </div>
+            </Col>
+            <Col md={3} sm={6}>
+              <div className="bg-orange-600 bg-opacity-40 p-3 pb-4 rounded-lg shadow-sm">
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <div className="text-sm text-white font-medium">Score Change</div>
+                    <div className="text-xl font-bold text-white">
+                      {dashboardMetrics.scoreChange !== 'N/A' ? `${dashboardMetrics.scoreChange} pts` : 'N/A'}
+                    </div>
+                    <div className="text-xs text-white opacity-75 mt-1">Last 30 days</div>
+                  </div>
+                  <div className="bg-orange-500 bg-opacity-50 p-2 rounded-full">
+                    <FiTrendingUp size={20} className="text-white" />
+                  </div>
+                </div>
+              </div>
+            </Col>
+          </Row>
         </div>
-      </nav>
 
-      {/* 🔹 Simplified Body with White Background */}
-      <div className="flex flex-1 justify-center items-center bg-white">
-        <div className="text-center">
-          <h2 className="text-4xl font-bold text-gray-800 mb-6">Dashboard</h2>
+        {/* Error Alert */}
+        {error && (
+          <Alert
+            variant="danger"
+            className="mb-4"
+            onClose={() => setError('')}
+            dismissible
+          >
+            {error}
+          </Alert>
+        )}
 
-          {/* Quick Actions */}
-          <div className="mt-8">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Quick Actions</h3>
-            <div className="flex justify-center space-x-6">
-              <button
-                onClick={() => setShowReportPrompt(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-md transition duration-200 flex items-center"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Generate Credit Report
-              </button>
-              <Link
-                to="/loan-accounts"
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg shadow-md transition duration-200 flex items-center"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                View Loan Accounts
-              </Link>
-            </div>
-          </div>
+        {/* Credit Score Display (if available) */}
+        {creditScore && (
+          <CreditScoreDisplay creditScore={creditScore} />
+        )}
+
+        {/* Financial Details Form */}
+        <SimplifiedFinancialForm onCreditScoreCalculated={handleCreditScoreCalculated} />
+
+        {/* Quick Links */}
+        <div className="mt-5">
+          <h3 className="text-xl font-semibold mb-3">Quick Actions</h3>
+          <Row>
+            <Col md={4} className="mb-4">
+              <Card className="h-100 shadow-sm hover:shadow-md transition-shadow border-0">
+                <Card.Body className="d-flex flex-column">
+                  <div className="bg-blue-100 text-blue-700 p-3 rounded-lg mb-3 align-self-start">
+                    <FiBarChart2 size={24} />
+                  </div>
+                  <Card.Title>Credit Score Analysis</Card.Title>
+                  <Card.Text className="text-muted mb-4">
+                    View detailed analysis of your credit score, including factors that affect it and how to improve it.
+                  </Card.Text>
+                  <Button
+                    variant="outline-primary"
+                    className="mt-auto"
+                    onClick={() => {
+                      if (creditScore) {
+                        window.scrollTo({
+                          top: 0,
+                          behavior: 'smooth'
+                        });
+                      } else {
+                        setError('Please calculate your credit score first');
+                      }
+                    }}
+                  >
+                    View Credit Analysis
+                  </Button>
+                </Card.Body>
+              </Card>
+            </Col>
+
+            <Col md={4} className="mb-4">
+              <Card className="h-100 shadow-sm hover:shadow-md transition-shadow border-0">
+                <Card.Body className="d-flex flex-column">
+                  <div className="bg-green-100 text-green-700 p-3 rounded-lg mb-3 align-self-start">
+                    <FiDollarSign size={24} />
+                  </div>
+                  <Card.Title>Loan Accounts</Card.Title>
+                  <Card.Text className="text-muted mb-4">
+                    Manage your loan accounts, view details, and add new loans from different institutions.
+                  </Card.Text>
+                  <Button
+                    variant="outline-success"
+                    className="mt-auto"
+                    onClick={() => navigate('/loan-accounts')}
+                  >
+                    Manage Loans
+                  </Button>
+                </Card.Body>
+              </Card>
+            </Col>
+
+            <Col md={4} className="mb-4">
+              <Card className="h-100 shadow-sm hover:shadow-md transition-shadow border-0">
+                <Card.Body className="d-flex flex-column">
+                  <div className="bg-purple-100 text-purple-700 p-3 rounded-lg mb-3 align-self-start">
+                    <FiFileText size={24} />
+                  </div>
+                  <Card.Title>Credit Reports</Card.Title>
+                  <Card.Text className="text-muted mb-4">
+                    Generate comprehensive credit reports based on your financial data and loan history.
+                  </Card.Text>
+                  <Button
+                    variant="outline-primary"
+                    className="mt-auto"
+                    onClick={() => navigate('/credit-report')}
+                  >
+                    Generate Report
+                  </Button>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
         </div>
-      </div>
-
-      {/* Report Generation Prompt */}
-      {showReportPrompt && (
-        <ReportPrompt onClose={() => setShowReportPrompt(false)} />
-      )}
+      </Container>
     </div>
   );
 };

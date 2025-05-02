@@ -1,7 +1,9 @@
 // File: src/pages/Login.jsx
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { login } from "../services/authService";
 import axios from "axios";
+import { API_BASE_URL } from "../services/axiosConfig";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -12,22 +14,39 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    console.log("Attempting login with:", { email, password: "******" });
+
+    // Clear any existing user data before login
+    localStorage.clear();
 
     try {
-      const response = await axios.post(
-        "http://127.0.0.1:8000/api/auth/login/",
-        { email, password },
-        { headers: { "Content-Type": "application/json" } }
-      );
+      const success = await login(email, password);
 
-      console.log("Login Success:", response.data);
-      localStorage.setItem("token", response.data.access);
-      navigate("/dashboard");
-    } catch (err) {
-      if (err.response) {
-        setError(err.response.data.detail || "Invalid credentials. Please try again.");
+      if (success) {
+        console.log("Login Success - Token stored");
+        navigate("/dashboard");
       } else {
-        setError("Network error. Please check your connection.");
+        console.error("Login failed - No access token in response");
+        setError("Login failed. Invalid response from server.");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+
+      if (err.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error("Error response data:", err.response.data);
+        console.error("Error response status:", err.response.status);
+        console.error("Error response headers:", err.response.headers);
+        setError(`Server error: ${err.response.status} - ${err.response.data.detail || JSON.stringify(err.response.data)}`);
+      } else if (err.request) {
+        // The request was made but no response was received
+        console.error("Error request:", err.request);
+        setError("Network error. No response from server. Please check your connection and make sure the backend server is running.");
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error("Error message:", err.message);
+        setError(`Error: ${err.message}`);
       }
     }
   };
@@ -39,9 +58,9 @@ const Login = () => {
         <div className="bg-white p-8 shadow-lg rounded-lg w-full max-w-md">
           <h2 className="text-3xl font-bold text-center text-gray-800">Sign In</h2>
           <p className="text-gray-500 text-center text-sm mt-1">Access your account</p>
-          
+
           {error && <p className="text-red-500 text-sm text-center mt-4">{error}</p>}
-          
+
           <form className="mt-6" onSubmit={handleSubmit}>
             <div>
               <label className="block text-gray-600 text-sm">Email Address</label>
@@ -54,7 +73,7 @@ const Login = () => {
                 required
               />
             </div>
-            
+
             <div className="mt-4">
               <label className="block text-gray-600 text-sm">Password</label>
               <input
@@ -66,7 +85,7 @@ const Login = () => {
                 required
               />
             </div>
-            
+
             <button
               type="submit"
               className="w-full bg-blue-500 text-white py-3 rounded-lg mt-6 hover:bg-blue-600 transition font-medium"
@@ -74,7 +93,7 @@ const Login = () => {
               Login
             </button>
           </form>
-          
+
           <p className="text-sm text-gray-600 text-center mt-6">
             Don't have an account? <Link to="/register" className="text-blue-500 hover:text-blue-700">Sign up</Link>
           </p>

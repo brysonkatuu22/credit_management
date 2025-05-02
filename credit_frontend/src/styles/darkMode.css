@@ -1,0 +1,210 @@
+/* Dark Mode Styles */
+.dark-mode {
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --bg-tertiary: #2d2d2d;
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0a0;
+  --border-color: #3a3a3a;
+  --card-bg: #1e1e1e;
+  --input-bg: #2d2d2d;
+  --input-text: #e0e0e0;
+  --input-border: #3a3a3a;
+  --btn-primary-bg: #3949ab;
+  --btn-primary-text: #ffffff;
+  --btn-secondary-bg: #424242;
+  --btn-secondary-text: #e0e0e0;
+  --shadow-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Apply dark mode styles to the entire document */
+.dark-mode {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Apply to body as well for full coverage */
+.dark-mode body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.dark-mode .bg-white,
+.dark-mode .bg-gray-100 {
+  background-color: var(--bg-primary) !important;
+}
+
+.dark-mode .bg-gray-50 {
+  background-color: var(--bg-secondary) !important;
+}
+
+.dark-mode .text-gray-800,
+.dark-mode .text-gray-700,
+.dark-mode .text-gray-600,
+.dark-mode .text-gray-500,
+.dark-mode .text-muted,
+.dark-mode .form-label,
+.dark-mode .card-title,
+.dark-mode h1,
+.dark-mode h2,
+.dark-mode h3,
+.dark-mode h4,
+.dark-mode h5,
+.dark-mode h6,
+.dark-mode p,
+.dark-mode .table,
+.dark-mode .table td,
+.dark-mode .table th,
+.dark-mode .modal-title,
+.dark-mode label,
+.dark-mode .form-check-label,
+.dark-mode small,
+.dark-mode span:not(.badge):not(.btn):not([class*="text-white"]):not([class*="text-success"]):not([class*="text-danger"]):not([class*="text-warning"]):not([class*="text-info"]) {
+  color: var(--text-primary) !important;
+}
+
+/* Ensure form text is visible */
+.dark-mode .form-text {
+  color: var(--text-secondary) !important;
+}
+
+.dark-mode .card,
+.dark-mode .modal-content {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark-mode .card-header {
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark-mode .form-control,
+.dark-mode .form-select {
+  background-color: var(--input-bg) !important;
+  color: var(--input-text) !important;
+  border-color: var(--input-border) !important;
+}
+
+.dark-mode .form-control:focus,
+.dark-mode .form-select:focus {
+  border-color: #3949ab !important;
+  box-shadow: 0 0 0 0.25rem rgba(57, 73, 171, 0.25) !important;
+}
+
+.dark-mode .dropdown-menu {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark-mode .dropdown-item {
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .dropdown-item:hover {
+  background-color: var(--bg-tertiary) !important;
+}
+
+/* Improve contrast for buttons in dark mode */
+.dark-mode .btn-outline-primary,
+.dark-mode .btn-outline-secondary,
+.dark-mode .btn-outline-success,
+.dark-mode .btn-outline-danger,
+.dark-mode .btn-outline-warning,
+.dark-mode .btn-outline-info {
+  color: var(--text-primary) !important;
+  border-color: var(--text-primary) !important;
+}
+
+.dark-mode .btn-outline-primary:hover,
+.dark-mode .btn-outline-secondary:hover,
+.dark-mode .btn-outline-success:hover,
+.dark-mode .btn-outline-danger:hover,
+.dark-mode .btn-outline-warning:hover,
+.dark-mode .btn-outline-info:hover {
+  color: var(--bg-primary) !important;
+  background-color: var(--text-primary) !important;
+}
+
+.dark-mode .border,
+.dark-mode .border-gray-200 {
+  border-color: var(--border-color) !important;
+}
+
+.dark-mode .shadow-sm,
+.dark-mode .shadow-md,
+.dark-mode .shadow-lg {
+  box-shadow: 0 4px 6px var(--shadow-color) !important;
+}
+
+.dark-mode .table {
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .table-striped > tbody > tr:nth-of-type(odd) > * {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .nav-pills .nav-link {
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .nav-pills .nav-link.active {
+  background-color: #3949ab !important;
+  color: white !important;
+}
+
+/* Credit Score Display Dark Mode */
+.dark-mode .score-circle {
+  background-color: var(--bg-tertiary) !important;
+}
+
+/* Loan Accounts specific dark mode styles */
+.dark-mode .loan-card {
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark-mode .loan-card .card-header {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.dark-mode .loan-card .text-gray-700,
+.dark-mode .loan-card .text-gray-600,
+.dark-mode .loan-card .text-gray-500 {
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .bg-light {
+  background-color: var(--bg-secondary) !important;
+}
+
+.dark-mode .text-primary {
+  color: #5c7cfa !important;
+}
+
+.dark-mode .text-secondary {
+  color: #a0a0a0 !important;
+}
+
+/* Ensure table text is visible in dark mode */
+.dark-mode .table {
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .table thead th {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark-mode .table tbody td {
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Transition for smooth theme switching */
+body, .card, .form-control, .dropdown-menu, .table, .nav-pills .nav-link {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}

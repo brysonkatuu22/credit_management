@@ -1,0 +1,138 @@
+/* Custom form styling */
+
+/* Range slider styling */
+.form-range {
+  height: 1.5rem;
+  padding: 0;
+  background-color: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.form-range:focus {
+  outline: none;
+}
+
+.form-range::-webkit-slider-thumb {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: -0.625rem;
+  background-color: #0d6efd;
+  border: 0;
+  border-radius: 50%;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-range::-webkit-slider-thumb:active {
+  background-color: #0a58ca;
+}
+
+.form-range::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 0.25rem;
+  color: transparent;
+  cursor: pointer;
+  background-color: #dee2e6;
+  border-color: transparent;
+  border-radius: 1rem;
+}
+
+.form-range::-moz-range-thumb {
+  width: 1.5rem;
+  height: 1.5rem;
+  background-color: #0d6efd;
+  border: 0;
+  border-radius: 50%;
+  -moz-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-range::-moz-range-thumb:active {
+  background-color: #0a58ca;
+}
+
+.form-range::-moz-range-track {
+  width: 100%;
+  height: 0.25rem;
+  color: transparent;
+  cursor: pointer;
+  background-color: #dee2e6;
+  border-color: transparent;
+  border-radius: 1rem;
+}
+
+/* Dark mode slider styling */
+.dark-mode .form-range::-webkit-slider-runnable-track {
+  background-color: #495057;
+}
+
+.dark-mode .form-range::-moz-range-track {
+  background-color: #495057;
+}
+
+/* Card hover effects */
+.card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Form control focus states */
+.form-control:focus,
+.form-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Button hover effects */
+.btn {
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+/* Fix for range slider in Firefox */
+@-moz-document url-prefix() {
+  .form-range {
+    height: 1.5rem;
+  }
+}
+
+/* Animated form labels */
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label,
+.form-floating > .form-select ~ label {
+  opacity: 0.65;
+  transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .form-range {
+    height: 2rem;
+  }
+  
+  .form-range::-webkit-slider-thumb {
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  .form-range::-moz-range-thumb {
+    width: 2rem;
+    height: 2rem;
+  }
+}

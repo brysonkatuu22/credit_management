@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
+import Header from "../components/Header";
 
 const CreditReport = () => {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ const CreditReport = () => {
   const [reportUrl, setReportUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isAutomated, setIsAutomated] = useState(false);
+  const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
   const reportButtonRef = useRef(null);
   const downloadButtonRef = useRef(null);
 
@@ -35,12 +37,10 @@ const CreditReport = () => {
 
       return () => clearTimeout(timer);
     }
-  }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/");
-  };
+    // Check dark mode
+    setDarkMode(localStorage.getItem('darkMode') === 'true');
+  }, []);
 
   const handleRequestReport = async () => {
     const token = localStorage.getItem("token");
@@ -112,7 +112,7 @@ const CreditReport = () => {
   ];
 
   return (
-    <div className="min-h-screen relative">
+    <div className={`min-h-screen relative ${darkMode ? 'dark-mode' : ''}`}>
       {/* Background with pattern */}
       <div className="absolute inset-0 bg-blue-50 opacity-70">
         <div className="absolute inset-0" style={{
@@ -129,40 +129,8 @@ const CreditReport = () => {
 
       {/* Content container */}
       <div className="relative min-h-screen flex flex-col">
-        {/* Navigation Bar with Red Logout Button */}
-        <nav className="bg-gradient-to-b from-blue-600 to-blue-800 shadow-lg p-4 flex justify-between items-center rounded-b-lg border-b-4 border-blue-900">
-          <h1
-            className="text-xl font-bold text-white drop-shadow-lg cursor-pointer"
-            onClick={() => navigate("/dashboard")}
-          >
-            Credit Portal
-          </h1>
-          <div className="space-x-4 flex items-center">
-            <button
-              className="text-blue-900 bg-white px-3 py-2 rounded-md shadow-md hover:bg-gray-200 transition-colors duration-200"
-              onClick={() => navigate("/loan-accounts")}
-            >
-              Loan Accounts
-            </button>
-            <button
-              className="text-white border-b-2 border-white px-3 py-2"
-            >
-              Credit Report
-            </button>
-            <button
-              className="text-blue-900 bg-white px-3 py-2 rounded-md shadow-md hover:bg-gray-200 transition-colors duration-200"
-              onClick={() => navigate("/learn-more")}
-            >
-              Learn More
-            </button>
-            <button
-              className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md shadow-md transition-colors duration-200"
-              onClick={handleLogout}
-            >
-              Logout
-            </button>
-          </div>
-        </nav>
+        {/* Header with Navigation */}
+        <Header />
 
         {/* Decorative elements */}
         <div className="absolute top-32 left-12 w-24 h-24 bg-blue-400 rounded-full opacity-20 blur-xl"></div>

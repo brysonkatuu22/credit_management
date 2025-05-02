@@ -26,10 +26,9 @@ urlpatterns = [
     path("api/loans/", include("loan.urls")),
     path("api/automation/", include("automation.urls")),
     path("api/credit-report/", include("credit_report.urls")),
-    path('api/loans/', include('loan.urls')),
-    
-      
-    
+    path("api/ml/", include("ml.urls")),  # Add ML URLs
+    path("api/financial/", include("financial.urls")),  # Add Financial URLs
+
     # JWT Authentication Endpoints
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
