@@ -7,7 +7,10 @@ const financialProfileSubject = new BehaviorSubject(null);
 const creditScoreSubject = new BehaviorSubject(null);
 const loansSubject = new BehaviorSubject([]);
 
-// Export the observables
+// Export the subjects for direct updates
+export { creditScoreSubject };
+
+// Export the observables for subscribing
 export const userData$ = userDataSubject.asObservable();
 export const financialProfile$ = financialProfileSubject.asObservable();
 export const creditScore$ = creditScoreSubject.asObservable();

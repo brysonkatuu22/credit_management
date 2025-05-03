@@ -8,6 +8,9 @@ import CreditScoreDisplay from "../components/CreditScoreDisplay";
 import Header from "../components/Header";
 import '../styles/darkMode.css';
 import { synchronizeData, initializeAllData } from "../services/dataService";
+// Import the subjects directly for updating
+import { creditScoreSubject } from "../services/dataService";
+// Import the observables for subscribing
 import {
   userData$,
   financialProfile$,
@@ -93,8 +96,8 @@ const Dashboard = () => {
     // Update the credit score state and also update the observable
     setCreditScore(scoreData);
 
-    // Update the credit score in the observable to ensure it's available throughout the app
-    creditScore$.next(scoreData);
+    // Update the credit score in the subject to ensure it's available throughout the app
+    creditScoreSubject.next(scoreData);
 
     // Log the new score for debugging
     console.log('Credit score updated in Dashboard:', scoreData.score);

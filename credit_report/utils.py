@@ -3,7 +3,8 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from django.utils.timezone import now
-from loan.models import LoanAccount
+from financial.models import LoanAccount as FinancialLoanAccount
+from loan.models import LoanAccount as LoanLoanAccount
 import os
 
 
@@ -40,24 +41,54 @@ def generate_pdf_report(user, file_path):
         elements.append(Spacer(1, 24))
 
         # Loan accounts section
-        loan_accounts = LoanAccount.objects.filter(user=user)
-        if loan_accounts.exists():
+        # Get loans from both models
+        financial_loans = FinancialLoanAccount.objects.filter(user=user)
+        loan_loans = LoanLoanAccount.objects.filter(user=user)
+
+        # Check if any loans exist
+        has_loans = financial_loans.exists() or loan_loans.exists()
+
+        if has_loans:
             elements.append(Paragraph("Loan Accounts", styles["Heading2"]))
             data = [
-                ["#", "Account Number", "Lender", "Loan Amount", "Balance", "Interest (%)", "Start Date", "End Date", "Status"]
+                ["#", "Lender", "Loan Type", "Amount", "Balance", "Interest (%)", "Start Date", "End Date", "Status"]
             ]
-            for idx, loan in enumerate(loan_accounts, start=1):
+
+            # Add loans from financial app
+            idx = 1
+            for loan in financial_loans:
+                # Convert remaining_balance to balance for consistency
+                balance = loan.remaining_balance
+                # Convert is_active to status for consistency
+                status = "Active" if loan.is_active else "Closed"
+
                 data.append([
                     idx,
-                    loan.account_number,
+                    loan.lender,
+                    loan.get_loan_type_display(),
+                    f"Ksh {loan.principal_amount}",
+                    f"Ksh {balance}",
+                    f"{loan.interest_rate}%",
+                    loan.start_date.strftime("%Y-%m-%d"),
+                    loan.end_date.strftime("%Y-%m-%d"),
+                    status
+                ])
+                idx += 1
+
+            # Add loans from loan app
+            for loan in loan_loans:
+                data.append([
+                    idx,
                     loan.lender_name,
-                    f"${loan.loan_amount}",
-                    f"${loan.balance}",
+                    "Loan",  # Default type since loan app doesn't have types
+                    f"Ksh {loan.loan_amount}",
+                    f"Ksh {loan.balance}",
                     f"{loan.interest_rate}%",
                     loan.start_date.strftime("%Y-%m-%d"),
                     loan.end_date.strftime("%Y-%m-%d"),
                     loan.status.capitalize()
                 ])
+                idx += 1
 
             table = Table(data, repeatRows=1)
             table.setStyle(TableStyle([
