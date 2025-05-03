@@ -221,7 +221,7 @@ const Login = () => {
           <h2 className="text-4xl font-bold mb-2 tracking-tight">DIGITALIZING CREDIT LOAN</h2>
           <h2 className="text-4xl font-bold tracking-tight">MANAGEMENT</h2>
           <p className="mt-4 text-blue-100 max-w-md mx-auto">
-            The smart way to track, manage, and optimize your credit and loans in one secure platform.
+            The smart way to track, manage, and optimize your creditscore and loans in one secure platform.
           </p>
         </div>
 
@@ -259,7 +259,7 @@ const Login = () => {
         </div>
 
         <div className="mt-12 text-center animate-fadeIn" style={{ animationDelay: '0.6s' }}>
-          <p className="text-sm text-blue-100">© 2023 Fintrack Solution. All rights reserved.</p>
+          <p className="text-sm text-blue-100">© 2025 Fintrack Solution. All rights reserved.</p>
         </div>
       </div>
     </div>
