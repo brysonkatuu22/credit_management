@@ -1217,7 +1217,7 @@ const LoanAccountsContent = () => {
                                                                 });
                                                             }}
                                                         >
-                                                            {term} {term === 12 ? "year" : term < 24 ? "month" : "months"}
+                                                            {term} {term === 12 ? "months" : term < 24 ? "month" : "months"}
                                                         </Button>
                                                     ))}
                                                 </div>
