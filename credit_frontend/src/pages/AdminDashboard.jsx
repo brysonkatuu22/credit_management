@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Alert, Spinner, ButtonGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Header from '../components/Header';
+import AdminReportAutomation from '../components/AdminReportAutomation';
+import BatchReportProcessor from '../components/BatchReportProcessor';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -14,6 +16,11 @@ const AdminDashboard = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
+  const [automationEnabled, setAutomationEnabled] = useState(false);
+  const [isAutomating, setIsAutomating] = useState(false);
+  const [automationEmail, setAutomationEmail] = useState('');
+  const [showBatchProcessor, setShowBatchProcessor] = useState(false);
+  const [batchResults, setBatchResults] = useState([]);
 
   // Check if user is admin
   useEffect(() => {
@@ -33,6 +40,19 @@ const AdminDashboard = () => {
       return;
     }
 
+    // If automation is enabled, start the automation process
+    if (automationEnabled) {
+      setIsAutomating(true);
+      setError('');
+      setSuccess('');
+      setSearchResults([]);
+      setSelectedUser(null);
+      setReportUrl('');
+      setAutomationEmail(searchEmail);
+      return;
+    }
+
+    // Otherwise, proceed with manual search
     setIsLoading(true);
     setError('');
     setSuccess('');
@@ -111,7 +131,34 @@ const AdminDashboard = () => {
           Welcome to the admin dashboard. As an admin user, you can generate credit reports for users by searching their email address.
         </p>
 
-        <Row>
+        <div className="d-flex justify-content-end mb-4">
+          <ButtonGroup>
+            <Button
+              variant={!showBatchProcessor ? "primary" : "outline-primary"}
+              onClick={() => setShowBatchProcessor(false)}
+            >
+              Single User Report
+            </Button>
+            <Button
+              variant={showBatchProcessor ? "primary" : "outline-primary"}
+              onClick={() => setShowBatchProcessor(true)}
+            >
+              Batch Reports
+            </Button>
+          </ButtonGroup>
+        </div>
+
+        {showBatchProcessor ? (
+          <BatchReportProcessor
+            onComplete={(results) => {
+              setBatchResults(results);
+              setShowBatchProcessor(false);
+              setSuccess(`Successfully processed ${results.filter(r => r.status === 'success').length} out of ${results.length} reports`);
+            }}
+            onCancel={() => setShowBatchProcessor(false)}
+          />
+        ) : (
+          <Row>
           <Col md={6}>
             <Card className="mb-4 shadow-sm">
               <Card.Header className="bg-primary text-white">
@@ -128,13 +175,32 @@ const AdminDashboard = () => {
                       onChange={(e) => setSearchEmail(e.target.value)}
                     />
                     <Form.Text className="text-muted">
-                      Enter a full or partial email address to search for users.
+                      Enter an email address to search for users.
                     </Form.Text>
                   </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <div className="d-flex align-items-center">
+                      <Form.Check
+                        type="switch"
+                        id="automation-switch"
+                        label="Enable RPA Automation"
+                        checked={automationEnabled}
+                        onChange={(e) => setAutomationEnabled(e.target.checked)}
+                        className="me-2"
+                      />
+                      <span className="text-muted small">
+                        {automationEnabled ?
+                          "Automatically generate and download report" :
+                          "Manual report generation"}
+                      </span>
+                    </div>
+                  </Form.Group>
+
                   <Button
                     variant="primary"
                     type="submit"
-                    disabled={isLoading}
+                    disabled={isLoading || isAutomating}
                     className="w-100"
                   >
                     {isLoading ? (
@@ -155,13 +221,43 @@ const AdminDashboard = () => {
                   </Button>
                 </Form>
 
-                {error && (
+                {error && !isAutomating && (
                   <Alert variant="danger" className="mt-3">
                     {error}
                   </Alert>
                 )}
 
-                {searchResults.length > 0 && (
+                {/* Show automation component when automation is active */}
+                {isAutomating && (
+                  <div className="mt-4">
+                    <Card className="border-primary">
+                      <Card.Header className="bg-primary text-white">
+                        <h6 className="mb-0">RPA Automation in Progress</h6>
+                      </Card.Header>
+                      <Card.Body>
+                        <div className="text-center mb-3">
+                          <h6>Visual Frontend RPA Demonstration</h6>
+                          <p className="text-muted small">Watch as the system automatically searches, selects, generates, and downloads the report</p>
+                        </div>
+                        <AdminReportAutomation
+                          userEmail={automationEmail}
+                          onComplete={(result) => {
+                            setIsAutomating(false);
+                            setSuccess(`Report for ${result.user.email} generated and downloaded successfully`);
+                            setReportUrl(result.reportUrl);
+                          }}
+                          onError={(errorMsg) => {
+                            setIsAutomating(false);
+                            setError(errorMsg);
+                          }}
+                          autoDownload={true}
+                        />
+                      </Card.Body>
+                    </Card>
+                  </div>
+                )}
+
+                {searchResults.length > 0 && !isAutomating && (
                   <div className="mt-4">
                     <h6>Search Results:</h6>
                     <div className="list-group">
@@ -197,7 +293,16 @@ const AdminDashboard = () => {
                 <h5 className="mb-0">Generate Report</h5>
               </Card.Header>
               <Card.Body>
-                {selectedUser ? (
+                {isAutomating ? (
+                  <div className="text-center py-4">
+                    <Alert variant="info">
+                      <p className="mb-0">
+                        <Spinner animation="border" size="sm" className="me-2" />
+                        RPA automation is in progress. The report will be generated and downloaded automatically.
+                      </p>
+                    </Alert>
+                  </div>
+                ) : selectedUser ? (
                   <>
                     <div className="mb-4">
                       <h6>Selected User:</h6>
@@ -257,7 +362,9 @@ const AdminDashboard = () => {
                 ) : (
                   <div className="text-center py-4">
                     <p className="text-muted">
-                      Search for and select a user to generate their credit report.
+                      {automationEnabled ?
+                        "Enter an email and click Search to automatically generate and download a report." :
+                        "Search for and select a user to generate their credit report."}
                     </p>
                   </div>
                 )}
@@ -265,6 +372,7 @@ const AdminDashboard = () => {
             </Card>
           </Col>
         </Row>
+        )}
       </Container>
     </div>
   );

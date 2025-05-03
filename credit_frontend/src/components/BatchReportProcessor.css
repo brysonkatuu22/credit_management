@@ -1,0 +1,91 @@
+/* BatchReportProcessor.css */
+
+.batch-processor {
+  position: relative;
+}
+
+.batch-progress {
+  height: 10px;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.email-textarea {
+  font-family: monospace;
+  resize: vertical;
+}
+
+.report-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.report-item {
+  transition: background-color 0.2s;
+}
+
+.report-item:hover {
+  background-color: #f8f9fa;
+}
+
+.report-item .download-btn {
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.report-item:hover .download-btn {
+  opacity: 1;
+}
+
+.current-processing {
+  border-left: 4px solid #0d6efd;
+  background-color: rgba(13, 110, 253, 0.05);
+}
+
+.batch-summary {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 20px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.summary-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.summary-label {
+  font-weight: 500;
+}
+
+.summary-value {
+  font-weight: 600;
+}
+
+.summary-value.success {
+  color: #198754;
+}
+
+.summary-value.error {
+  color: #dc3545;
+}
+
+/* Animation for processing */
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(13, 110, 253, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0); }
+}
+
+.processing-animation {
+  animation: pulse 2s infinite;
+}
