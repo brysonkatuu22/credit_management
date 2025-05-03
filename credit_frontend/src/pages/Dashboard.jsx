@@ -41,7 +41,8 @@ const Dashboard = () => {
     // Subscribe to user data observable
     const userDataSubscription = userData$.subscribe(userData => {
       if (userData) {
-        if (userData.name) {
+        console.log('Dashboard received user data:', userData);
+        if (userData.name && userData.name.trim() !== '') {
           setUserName(userData.name);
         } else if (userData.email) {
           // Use email as fallback

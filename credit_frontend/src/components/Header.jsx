@@ -14,6 +14,7 @@ const Header = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profileUpdated, setProfileUpdated] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     // Check if dark mode is enabled in localStorage
@@ -32,24 +33,48 @@ const Header = () => {
     const userDataSubscription = userData$.subscribe(userData => {
       if (userData) {
         console.log('Header received user data:', userData);
-        if (userData.name) {
+        if (userData.name && userData.name.trim() !== '') {
           setUserName(userData.name);
           setDisplayName(userData.name);
         } else if (userData.email) {
           // Use email as fallback
-          setUserName(userData.email.split('@')[0]);
-          setDisplayName(userData.email.split('@')[0]);
+          const emailUsername = userData.email.split('@')[0];
+          setUserName(emailUsername);
+          setDisplayName(emailUsername);
+
+          // If name is empty but we have first_name/last_name, update the name
+          if (userData.first_name || userData.last_name) {
+            const fullName = `${userData.first_name || ''} ${userData.last_name || ''}`.trim();
+            if (fullName) {
+              // Update the userData object with the new name
+              userData = {
+                ...userData,
+                name: fullName
+              };
+
+              // Update the name state variables
+              setUserName(fullName);
+              setDisplayName(fullName);
+            }
+          }
         }
 
         // Store email if available
         if (userData.email) {
           setUserEmail(userData.email);
         }
+
+        // Check if user is admin
+        setIsAdmin(userData.is_admin === true);
+
+        // Store user info in localStorage for other components
+        localStorage.setItem('userInfo', JSON.stringify(userData));
       } else {
         // Clear user info if no data is available
         setUserName('');
         setDisplayName('');
         setUserEmail('');
+        setIsAdmin(false);
       }
     });
 
@@ -103,37 +128,53 @@ const Header = () => {
 
           {/* Main Navigation */}
           <div className="hidden md:flex space-x-1">
-            <Link
-              to="/dashboard"
-              className={`px-4 py-2 rounded-lg transition-all duration-200 font-medium ${
-                isActive('/dashboard')
-                  ? 'bg-white text-blue-800'
-                  : 'text-white hover:bg-blue-600'
-              }`}
-            >
-              Dashboard
-            </Link>
-            <Link
-              to="/loan-accounts"
-              className={`px-4 py-2 rounded-lg transition-all duration-200 font-medium ${
-                isActive('/loan-accounts')
-                  ? 'bg-white text-blue-800'
-                  : 'text-white hover:bg-blue-600'
-              }`}
-            >
-              Loan Accounts
-            </Link>
-            <Link
-              to="/credit-report"
-              className={`px-4 py-2 rounded-lg transition-all duration-200 font-medium ${
-                isActive('/credit-report')
-                  ? 'bg-white text-blue-800'
-                  : 'text-white hover:bg-blue-600'
-              }`}
-            >
-              Credit Report
-            </Link>
-
+            {isAdmin ? (
+              // Only show Admin Dashboard link for admin users
+              <Link
+                to="/admin-dashboard"
+                className={`px-4 py-2 rounded-lg transition-all duration-200 font-medium ${
+                  isActive('/admin-dashboard')
+                    ? 'bg-white text-blue-800'
+                    : 'text-white hover:bg-blue-600'
+                }`}
+              >
+                Admin Dashboard
+              </Link>
+            ) : (
+              // Show regular navigation links for non-admin users
+              <>
+                <Link
+                  to="/dashboard"
+                  className={`px-4 py-2 rounded-lg transition-all duration-200 font-medium ${
+                    isActive('/dashboard')
+                      ? 'bg-white text-blue-800'
+                      : 'text-white hover:bg-blue-600'
+                  }`}
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  to="/loan-accounts"
+                  className={`px-4 py-2 rounded-lg transition-all duration-200 font-medium ${
+                    isActive('/loan-accounts')
+                      ? 'bg-white text-blue-800'
+                      : 'text-white hover:bg-blue-600'
+                  }`}
+                >
+                  Loan Accounts
+                </Link>
+                <Link
+                  to="/credit-report"
+                  className={`px-4 py-2 rounded-lg transition-all duration-200 font-medium ${
+                    isActive('/credit-report')
+                      ? 'bg-white text-blue-800'
+                      : 'text-white hover:bg-blue-600'
+                  }`}
+                >
+                  Credit Report
+                </Link>
+              </>
+            )}
           </div>
 
           {/* User Menu */}
@@ -193,16 +234,18 @@ const Header = () => {
                   )}
                 </Dropdown.Item>
 
-                <Dropdown.Item
-                  as="button"
-                  className="rounded-md hover:bg-blue-50 flex items-center py-2"
-                  onClick={() => navigate('/model-dashboard')}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                  ML Dashboard
-                </Dropdown.Item>
+                {!isAdmin && (
+                  <Dropdown.Item
+                    as="button"
+                    className="rounded-md hover:bg-blue-50 flex items-center py-2"
+                    onClick={() => navigate('/model-dashboard')}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    ML Dashboard
+                  </Dropdown.Item>
+                )}
 
                 <Dropdown.Divider />
 
@@ -222,31 +265,45 @@ const Header = () => {
       {/* Mobile Navigation */}
       <div className="md:hidden bg-blue-800 text-white">
         <div className="flex justify-between overflow-x-auto py-2 px-4">
-          <Link
-            to="/dashboard"
-            className={`px-3 py-2 text-sm font-medium whitespace-nowrap ${
-              isActive('/dashboard') ? 'bg-white text-blue-800 rounded-lg' : ''
-            }`}
-          >
-            Dashboard
-          </Link>
-          <Link
-            to="/loan-accounts"
-            className={`px-3 py-2 text-sm font-medium whitespace-nowrap ${
-              isActive('/loan-accounts') ? 'bg-white text-blue-800 rounded-lg' : ''
-            }`}
-          >
-            Loans
-          </Link>
-          <Link
-            to="/credit-report"
-            className={`px-3 py-2 text-sm font-medium whitespace-nowrap ${
-              isActive('/credit-report') ? 'bg-white text-blue-800 rounded-lg' : ''
-            }`}
-          >
-            Reports
-          </Link>
-
+          {isAdmin ? (
+            // Only show Admin Dashboard link for admin users
+            <Link
+              to="/admin-dashboard"
+              className={`px-3 py-2 text-sm font-medium whitespace-nowrap ${
+                isActive('/admin-dashboard') ? 'bg-white text-blue-800 rounded-lg' : ''
+              }`}
+            >
+              Admin Dashboard
+            </Link>
+          ) : (
+            // Show regular navigation links for non-admin users
+            <>
+              <Link
+                to="/dashboard"
+                className={`px-3 py-2 text-sm font-medium whitespace-nowrap ${
+                  isActive('/dashboard') ? 'bg-white text-blue-800 rounded-lg' : ''
+                }`}
+              >
+                Dashboard
+              </Link>
+              <Link
+                to="/loan-accounts"
+                className={`px-3 py-2 text-sm font-medium whitespace-nowrap ${
+                  isActive('/loan-accounts') ? 'bg-white text-blue-800 rounded-lg' : ''
+                }`}
+              >
+                Loans
+              </Link>
+              <Link
+                to="/credit-report"
+                className={`px-3 py-2 text-sm font-medium whitespace-nowrap ${
+                  isActive('/credit-report') ? 'bg-white text-blue-800 rounded-lg' : ''
+                }`}
+              >
+                Reports
+              </Link>
+            </>
+          )}
         </div>
       </div>
 

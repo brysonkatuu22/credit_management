@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth import get_user_model, authenticate
 from .serializers import UserSerializer
 
@@ -64,3 +65,29 @@ def verify_password(request):
         {"detail": "Password verified successfully."},
         status=status.HTTP_200_OK
     )
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    """
+    Custom token view that includes the is_admin field in the response
+    """
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+
+        if response.status_code == 200:
+            # Get the user from the request
+            email = request.data.get('email')
+            try:
+                user = User.objects.get(email=email)
+                # Add user data to the response
+                response.data['user'] = {
+                    'id': user.id,
+                    'email': user.email,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'is_admin': user.is_admin
+                }
+            except User.DoesNotExist:
+                pass
+
+        return response

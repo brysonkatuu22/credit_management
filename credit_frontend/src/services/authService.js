@@ -38,13 +38,20 @@ export const login = async (email, password) => {
 
       // Store user info in localStorage and update data service
       if (response.data.user) {
+        // Make sure first_name and last_name are not null or undefined
+        const firstName = response.data.user.first_name || '';
+        const lastName = response.data.user.last_name || '';
+
         const userInfo = {
           id: response.data.user.id,
           email: response.data.user.email,
-          name: `${response.data.user.first_name} ${response.data.user.last_name}`.trim(),
-          first_name: response.data.user.first_name,
-          last_name: response.data.user.last_name
+          name: `${firstName} ${lastName}`.trim() || response.data.user.email.split('@')[0],
+          first_name: firstName,
+          last_name: lastName,
+          is_admin: response.data.user.is_admin || false
         };
+
+        console.log('Storing user info:', userInfo);
         updateUserData(userInfo);
       } else {
         // If user info is not provided, fetch it
@@ -56,13 +63,20 @@ export const login = async (email, password) => {
           });
 
           if (userResponse.data) {
+            // Make sure first_name and last_name are not null or undefined
+            const firstName = userResponse.data.first_name || '';
+            const lastName = userResponse.data.last_name || '';
+
             const userInfo = {
               id: userResponse.data.id,
               email: userResponse.data.email,
-              name: `${userResponse.data.first_name} ${userResponse.data.last_name}`.trim(),
-              first_name: userResponse.data.first_name,
-              last_name: userResponse.data.last_name
+              name: `${firstName} ${lastName}`.trim() || userResponse.data.email.split('@')[0],
+              first_name: firstName,
+              last_name: lastName,
+              is_admin: userResponse.data.is_admin || false
             };
+
+            console.log('Storing user info from API:', userInfo);
             updateUserData(userInfo);
           }
         } catch (userError) {

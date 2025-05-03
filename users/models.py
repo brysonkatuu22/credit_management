@@ -10,7 +10,7 @@ class CustomUserManager(BaseUserManager):
         """Create and return a regular user with an email and password."""
         if not email:
             raise ValueError(_("The Email field must be set"))
-        
+
         email = self.normalize_email(email)
         extra_fields.setdefault("is_active", True)
         user = self.model(email=email, **extra_fields)
@@ -26,7 +26,7 @@ class CustomUserManager(BaseUserManager):
             raise ValueError(_("Superuser must have is_staff=True."))
         if extra_fields.get("is_superuser") is not True:
             raise ValueError(_("Superuser must have is_superuser=True."))
-        
+
         return self.create_user(email, password, **extra_fields)
 
 
@@ -41,6 +41,7 @@ class CustomUser(AbstractUser, PermissionsMixin):
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    is_admin = models.BooleanField(default=False, verbose_name=_("Admin User"))
 
     objects = CustomUserManager()
 

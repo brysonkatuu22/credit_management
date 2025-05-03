@@ -49,7 +49,15 @@ const Login = () => {
 
       if (success) {
         console.log("Login Success - Token stored");
-        navigate("/dashboard");
+
+        // Check if user is admin and redirect accordingly
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        if (userInfo.is_admin) {
+          console.log("Admin user detected, redirecting to admin dashboard");
+          navigate("/admin-dashboard");
+        } else {
+          navigate("/dashboard");
+        }
       } else {
         console.error("Login failed - No access token in response");
         setError("Login failed. Invalid response from server.");
