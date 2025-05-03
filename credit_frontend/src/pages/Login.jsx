@@ -132,7 +132,6 @@ const Login = () => {
                   Password
                 </label>
                 <a href="#" className="text-sm text-fintrack-light hover:text-fintrack-DEFAULT transition-colors">
-                  Forgot password?
                 </a>
               </div>
               <div className="relative">
