@@ -6,6 +6,12 @@ const userDataSubject = new BehaviorSubject(null);
 const financialProfileSubject = new BehaviorSubject(null);
 const creditScoreSubject = new BehaviorSubject(null);
 const loansSubject = new BehaviorSubject([]);
+const creditReportsSubject = new BehaviorSubject([]);
+const dashboardMetricsSubject = new BehaviorSubject({
+  activeLoans: 0,
+  creditReportsGenerated: 0,
+  scoreChange: 'N/A'
+});
 
 // Export the subjects for direct updates
 export { creditScoreSubject };
@@ -15,6 +21,8 @@ export const userData$ = userDataSubject.asObservable();
 export const financialProfile$ = financialProfileSubject.asObservable();
 export const creditScore$ = creditScoreSubject.asObservable();
 export const loans$ = loansSubject.asObservable();
+export const creditReports$ = creditReportsSubject.asObservable();
+export const dashboardMetrics$ = dashboardMetricsSubject.asObservable();
 
 // Initialize data from localStorage
 const initializeFromLocalStorage = () => {
@@ -62,17 +70,7 @@ const initializeFromLocalStorage = () => {
 // Initialize data
 initializeFromLocalStorage();
 
-// Create additional observables for credit reports and dashboard metrics
-const creditReportsSubject = new BehaviorSubject([]);
-const dashboardMetricsSubject = new BehaviorSubject({
-  activeLoans: 0,
-  creditReportsGenerated: 0,
-  scoreChange: 'N/A'
-});
-
-// Export the new observables
-export const creditReports$ = creditReportsSubject.asObservable();
-export const dashboardMetrics$ = dashboardMetricsSubject.asObservable();
+// Subjects and observables are now defined at the top of the file
 
 // User data functions
 export const updateUserData = (data) => {
@@ -715,16 +713,14 @@ export const synchronizeData = async () => {
     }
 
     // Update dashboard metrics and fetch reports in parallel
-    const [metrics, reports] = await Promise.all([
-      updateDashboardMetrics(loans, creditScore).catch(e => {
-        console.error('Error updating metrics:', e);
-        return dashboardMetricsSubject.getValue();
-      }),
-      fetchCreditReports().catch(e => {
-        console.error('Error fetching reports:', e);
-        return creditReportsSubject.getValue();
-      })
-    ]);
+    // Note: updateDashboardMetrics now fetches reports internally, so we don't need to call fetchCreditReports separately
+    const metrics = await updateDashboardMetrics(loans, creditScore).catch(e => {
+      console.error('Error updating metrics:', e);
+      return dashboardMetricsSubject.getValue();
+    });
+
+    // Get the latest reports from the subject
+    const reports = creditReportsSubject.getValue();
 
     // Store the sync timestamp
     localStorage.setItem('lastSyncTimestamp', new Date().getTime().toString());
@@ -852,10 +848,17 @@ export const fetchCreditReports = async () => {
     const response = await axiosInstance.get('/credit-report/reports/');
     const reports = response.data;
 
-    creditReportsSubject.next(reports);
-    localStorage.setItem('creditReports', JSON.stringify(reports));
+    // Process the reports to ensure they have the required fields
+    const processedReports = reports.map(report => ({
+      ...report,
+      // Ensure created_at exists for filtering in updateDashboardMetrics
+      created_at: report.created_at || new Date(report.id).toISOString()
+    }));
 
-    return reports;
+    creditReportsSubject.next(processedReports);
+    localStorage.setItem('creditReports', JSON.stringify(processedReports));
+
+    return processedReports;
   } catch (error) {
     console.error('Error fetching credit reports:', error);
     // If API fails, return current value
@@ -870,10 +873,31 @@ export const updateDashboardMetrics = async (loans, creditScore) => {
     const currentMetrics = dashboardMetricsSubject.getValue();
 
     // Calculate active loans count
-    const activeLoans = loans ? loans.filter(loan => loan.is_active).length : 0;
+    const activeLoans = loans ? loans.filter(loan => loan.is_active || loan.status === 'active').length : 0;
 
     // Calculate credit reports generated this month
-    const reports = creditReportsSubject.getValue();
+    // First try to fetch the latest reports from the API
+    let reports = [];
+    try {
+      const response = await axiosInstance.get('/credit-report/reports/');
+      reports = response.data;
+
+      // Update the reports subject with the latest data
+      if (reports && reports.length > 0) {
+        const processedReports = reports.map(report => ({
+          ...report,
+          created_at: report.created_at || new Date(report.id).toISOString()
+        }));
+
+        creditReportsSubject.next(processedReports);
+        localStorage.setItem('creditReports', JSON.stringify(processedReports));
+      }
+    } catch (error) {
+      console.error('Error fetching reports for metrics:', error);
+      // Fall back to cached reports
+      reports = creditReportsSubject.getValue();
+    }
+
     const now = new Date();
     const thisMonth = now.getMonth();
     const thisYear = now.getFullYear();

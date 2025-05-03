@@ -9,8 +9,17 @@ from django.contrib.auth import get_user_model
 import os
 import mimetypes
 from .utils import generate_pdf_report
+from .models import CreditReportRequest
+from django.core.files.base import ContentFile
+from rest_framework import serializers
 
 User = get_user_model()
+
+# Serializer for CreditReportRequest model
+class CreditReportRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CreditReportRequest
+        fields = ['id', 'created_at', 'report_file']
 
 
 @api_view(['POST'])
@@ -19,7 +28,6 @@ def generate_credit_report(request):
     user = request.user
     timestamp = now().strftime("%Y%m%d_%H%M%S")
     filename = f"Loan_Report_{timestamp}.pdf"
-
 
     # Ensure directory exists
     reports_dir = os.path.join(settings.MEDIA_ROOT, "reports")
@@ -30,6 +38,17 @@ def generate_credit_report(request):
     # Generate the PDF report
     try:
         generate_pdf_report(user, file_path)
+
+        # Create a record in the CreditReportRequest model
+        report_request = CreditReportRequest(user=user)
+
+        # Save the file path to the model
+        with open(file_path, 'rb') as f:
+            report_request.report_file.save(filename, ContentFile(f.read()), save=True)
+
+        # Save the record
+        report_request.save()
+
     except Exception as e:
         return Response({
             "error": f"Failed to generate report: {str(e)}"
@@ -174,6 +193,17 @@ def admin_generate_report(request):
     # Generate the PDF report
     try:
         generate_pdf_report(target_user, file_path)
+
+        # Create a record in the CreditReportRequest model
+        report_request = CreditReportRequest(user=target_user)
+
+        # Save the file path to the model
+        with open(file_path, 'rb') as f:
+            report_request.report_file.save(filename, ContentFile(f.read()), save=True)
+
+        # Save the record
+        report_request.save()
+
     except Exception as e:
         return Response({
             "error": f"Failed to generate report: {str(e)}"
@@ -183,3 +213,18 @@ def admin_generate_report(request):
         "message": f"Report for {target_user.email} generated successfully.",
         "report_url": f"{settings.MEDIA_URL}reports/{filename}"
     }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_reports(request):
+    """
+    Get all credit reports for the current user.
+    """
+    # Get reports for the current user
+    reports = CreditReportRequest.objects.filter(user=request.user).order_by('-created_at')
+
+    # Serialize the reports
+    serializer = CreditReportRequestSerializer(reports, many=True)
+
+    return Response(serializer.data, status=status.HTTP_200_OK)
