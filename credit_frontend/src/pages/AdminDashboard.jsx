@@ -5,6 +5,7 @@ import axios from 'axios';
 import Header from '../components/Header';
 import AdminReportAutomation from '../components/AdminReportAutomation';
 import BatchReportProcessor from '../components/BatchReportProcessor';
+import './AdminDashboard.css';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -21,8 +22,9 @@ const AdminDashboard = () => {
   const [automationEmail, setAutomationEmail] = useState('');
   const [showBatchProcessor, setShowBatchProcessor] = useState(false);
   const [batchResults, setBatchResults] = useState([]);
+  const [activeUsersCount, setActiveUsersCount] = useState(0);
 
-  // Check if user is admin
+  // Check if user is admin and fetch active users count
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     if (!userInfo.is_admin) {
@@ -31,7 +33,33 @@ const AdminDashboard = () => {
 
     // Check dark mode
     setDarkMode(localStorage.getItem('darkMode') === 'true');
+
+    // Fetch active users count
+    fetchActiveUsersCount();
   }, [navigate]);
+
+  // Function to fetch active users count
+  const fetchActiveUsersCount = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        'http://127.0.0.1:8000/api/credit-report/admin/active-users-count/',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data && response.data.count) {
+        setActiveUsersCount(response.data.count);
+      }
+    } catch (err) {
+      console.error('Error fetching active users count:', err);
+      // Set a fallback count if the API fails
+      setActiveUsersCount(0);
+    }
+  };
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -126,23 +154,44 @@ const AdminDashboard = () => {
     <div className={darkMode ? 'dark-mode' : ''}>
       <Header />
       <Container className="py-4">
-        <h1 className="mb-4">Admin Dashboard</h1>
-        <p className="text-muted mb-4">
-          Welcome to the admin dashboard. As an admin user, you can generate credit reports for users by searching their email address.
-        </p>
+        <div className="admin-dashboard-header mb-4">
+          <div className="d-flex justify-content-between align-items-center">
+            <div>
+              <h1 className="mb-2 text-primary">Admin Dashboard</h1>
+              <p className="text-muted">
+                Welcome to the admin dashboard. As an admin user, you can generate credit reports for users by searching their email address.
+              </p>
+            </div>
+            <div className="admin-dashboard-stats d-none d-md-flex">
+              <div className="admin-stat-card">
+                <div className="stat-icon">
+                  <i className="fas fa-users"></i>
+                </div>
+                <div className="stat-content">
+                  <h3>Active Users</h3>
+                  <p className="stat-value">{activeUsersCount || 'N/A'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div className="d-flex justify-content-end mb-4">
-          <ButtonGroup>
+          <ButtonGroup className="admin-tab-buttons">
             <Button
               variant={!showBatchProcessor ? "primary" : "outline-primary"}
               onClick={() => setShowBatchProcessor(false)}
+              className="px-4 py-2"
             >
+              <i className="fas fa-user me-2"></i>
               Single User Report
             </Button>
             <Button
               variant={showBatchProcessor ? "primary" : "outline-primary"}
               onClick={() => setShowBatchProcessor(true)}
+              className="px-4 py-2"
             >
+              <i className="fas fa-users me-2"></i>
               Batch Reports
             </Button>
           </ButtonGroup>
@@ -160,40 +209,48 @@ const AdminDashboard = () => {
         ) : (
           <Row>
           <Col md={6}>
-            <Card className="mb-4 shadow-sm">
+            <Card className="mb-4 admin-card">
               <Card.Header className="bg-primary text-white">
-                <h5 className="mb-0">Search Users</h5>
+                <h5 className="mb-0"><i className="fas fa-search me-2"></i>Search Users</h5>
               </Card.Header>
               <Card.Body>
                 <Form onSubmit={handleSearch}>
-                  <Form.Group className="mb-3">
+                  <Form.Group className="mb-4">
                     <Form.Label>User Email</Form.Label>
-                    <Form.Control
-                      type="email"
-                      placeholder="Enter user email"
-                      value={searchEmail}
-                      onChange={(e) => setSearchEmail(e.target.value)}
-                    />
-                    <Form.Text className="text-muted">
+                    <div className="search-input-container">
+                      <i className="fas fa-envelope search-icon"></i>
+                      <Form.Control
+                        type="email"
+                        placeholder="Enter user email"
+                        value={searchEmail}
+                        onChange={(e) => setSearchEmail(e.target.value)}
+                        className="search-input"
+                      />
+                    </div>
+                    <Form.Text className="text-primary">
                       Enter an email address to search for users.
                     </Form.Text>
                   </Form.Group>
 
-                  <Form.Group className="mb-3">
-                    <div className="d-flex align-items-center">
-                      <Form.Check
-                        type="switch"
-                        id="automation-switch"
-                        label="Enable RPA Automation"
-                        checked={automationEnabled}
-                        onChange={(e) => setAutomationEnabled(e.target.checked)}
-                        className="me-2"
-                      />
-                      <span className="text-muted small">
-                        {automationEnabled ?
-                          "Automatically generate and download report" :
-                          "Manual report generation"}
-                      </span>
+                  <Form.Group className="mb-4">
+                    <div className="automation-toggle-container p-3 rounded">
+                      <div className="d-flex align-items-center justify-content-between">
+                        <div>
+                          <h6 className="mb-1">RPA Automation</h6>
+                          <p className="text-muted small mb-0">
+                            {automationEnabled ?
+                              "Automatically generate and download report" :
+                              "Manual report generation"}
+                          </p>
+                        </div>
+                        <Form.Check
+                          type="switch"
+                          id="automation-switch"
+                          checked={automationEnabled}
+                          onChange={(e) => setAutomationEnabled(e.target.checked)}
+                          className="automation-switch"
+                        />
+                      </div>
                     </div>
                   </Form.Group>
 
@@ -201,7 +258,7 @@ const AdminDashboard = () => {
                     variant="primary"
                     type="submit"
                     disabled={isLoading || isAutomating}
-                    className="w-100"
+                    className="w-100 search-button"
                   >
                     {isLoading ? (
                       <>
@@ -216,13 +273,17 @@ const AdminDashboard = () => {
                         Searching...
                       </>
                     ) : (
-                      'Search Users'
+                      <>
+                        <i className="fas fa-search me-2"></i>
+                        Search Users
+                      </>
                     )}
                   </Button>
                 </Form>
 
                 {error && !isAutomating && (
                   <Alert variant="danger" className="mt-3">
+                    <i className="fas fa-exclamation-circle me-2"></i>
                     {error}
                   </Alert>
                 )}
@@ -230,12 +291,15 @@ const AdminDashboard = () => {
                 {/* Show automation component when automation is active */}
                 {isAutomating && (
                   <div className="mt-4">
-                    <Card className="border-primary">
+                    <Card className="automation-card">
                       <Card.Header className="bg-primary text-white">
-                        <h6 className="mb-0">RPA Automation in Progress</h6>
+                        <h6 className="mb-0"><i className="fas fa-robot me-2"></i>RPA Automation in Progress</h6>
                       </Card.Header>
                       <Card.Body>
                         <div className="text-center mb-3">
+                          <div className="automation-icon mb-2">
+                            <i className="fas fa-cogs"></i>
+                          </div>
                           <h6>Visual Frontend RPA Demonstration</h6>
                           <p className="text-muted small">Watch as the system automatically searches, selects, generates, and downloads the report</p>
                         </div>
@@ -258,13 +322,13 @@ const AdminDashboard = () => {
                 )}
 
                 {searchResults.length > 0 && !isAutomating && (
-                  <div className="mt-4">
-                    <h6>Search Results:</h6>
-                    <div className="list-group">
+                  <div className="mt-4 search-results-container">
+                    <h6 className="text-primary mb-3"><i className="fas fa-list me-2"></i>Search Results:</h6>
+                    <div className="list-group search-results">
                       {searchResults.map((user) => (
                         <button
                           key={user.id}
-                          className={`list-group-item list-group-item-action ${
+                          className={`list-group-item list-group-item-action user-result-item ${
                             selectedUser?.id === user.id ? 'active' : ''
                           }`}
                           onClick={() => handleSelectUser(user)}
@@ -288,40 +352,53 @@ const AdminDashboard = () => {
           </Col>
 
           <Col md={6}>
-            <Card className="mb-4 shadow-sm">
+            <Card className="mb-4 admin-card">
               <Card.Header className="bg-success text-white">
-                <h5 className="mb-0">Generate Report</h5>
+                <h5 className="mb-0"><i className="fas fa-file-alt me-2"></i>Generate Report</h5>
               </Card.Header>
               <Card.Body>
                 {isAutomating ? (
                   <div className="text-center py-4">
-                    <Alert variant="info">
-                      <p className="mb-0">
-                        <Spinner animation="border" size="sm" className="me-2" />
-                        RPA automation is in progress. The report will be generated and downloaded automatically.
-                      </p>
+                    <Alert variant="info" className="automation-alert">
+                      <div className="d-flex align-items-center">
+                        <div className="automation-alert-icon me-3">
+                          <Spinner animation="border" size="sm" />
+                        </div>
+                        <div>
+                          <p className="mb-0 fw-bold">RPA Automation in Progress</p>
+                          <p className="mb-0 small">The report will be generated and downloaded automatically.</p>
+                        </div>
+                      </div>
                     </Alert>
                   </div>
                 ) : selectedUser ? (
                   <>
-                    <div className="mb-4">
-                      <h6>Selected User:</h6>
-                      <p>
-                        <strong>Email:</strong> {selectedUser.email}
-                        <br />
-                        <strong>Name:</strong> {selectedUser.first_name}{' '}
-                        {selectedUser.last_name}
-                        <br />
-                        <strong>Joined:</strong>{' '}
-                        {new Date(selectedUser.date_joined).toLocaleDateString()}
-                      </p>
+                    <div className="mb-4 selected-user-card">
+                      <div className="user-card-header">
+                        <i className="fas fa-user-circle user-icon"></i>
+                        <h6>Selected User</h6>
+                      </div>
+                      <div className="user-card-body">
+                        <div className="user-info-item">
+                          <span className="info-label">Email:</span>
+                          <span className="info-value">{selectedUser.email}</span>
+                        </div>
+                        <div className="user-info-item">
+                          <span className="info-label">Name:</span>
+                          <span className="info-value">{selectedUser.first_name} {selectedUser.last_name}</span>
+                        </div>
+                        <div className="user-info-item">
+                          <span className="info-label">Joined:</span>
+                          <span className="info-value">{new Date(selectedUser.date_joined).toLocaleDateString()}</span>
+                        </div>
+                      </div>
                     </div>
 
                     <Button
                       variant="success"
                       onClick={handleGenerateReport}
                       disabled={isLoading}
-                      className="w-100"
+                      className="w-100 generate-button"
                     >
                       {isLoading ? (
                         <>
@@ -336,31 +413,39 @@ const AdminDashboard = () => {
                           Generating Report...
                         </>
                       ) : (
-                        'Generate Credit Report'
+                        <>
+                          <i className="fas fa-file-download me-2"></i>
+                          Generate Credit Report
+                        </>
                       )}
                     </Button>
 
                     {success && (
-                      <Alert variant="success" className="mt-3">
+                      <Alert variant="success" className="mt-3 success-alert">
+                        <i className="fas fa-check-circle me-2"></i>
                         {success}
                       </Alert>
                     )}
 
                     {reportUrl && (
-                      <div className="mt-3 text-center">
+                      <div className="mt-3 text-center download-container">
                         <a
                           href={`http://127.0.0.1:8000${reportUrl}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="btn btn-outline-primary"
+                          className="btn btn-outline-primary download-button"
                         >
+                          <i className="fas fa-download me-2"></i>
                           Download Report
                         </a>
                       </div>
                     )}
                   </>
                 ) : (
-                  <div className="text-center py-4">
+                  <div className="text-center py-5 empty-state">
+                    <div className="empty-icon mb-3">
+                      <i className="fas fa-search"></i>
+                    </div>
                     <p className="text-muted">
                       {automationEnabled ?
                         "Enter an email and click Search to automatically generate and download a report." :

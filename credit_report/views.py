@@ -228,3 +228,21 @@ def get_user_reports(request):
     serializer = CreditReportRequestSerializer(reports, many=True)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_active_users_count(request):
+    """
+    Get the count of active users in the system.
+    Only accessible to admin users.
+    """
+    # Check if the user is an admin
+    if not request.user.is_admin:
+        return Response({"error": "You do not have permission to access this resource."},
+                        status=status.HTTP_403_FORBIDDEN)
+
+    # Count active users
+    active_users_count = User.objects.filter(is_active=True).count()
+
+    return Response({"count": active_users_count}, status=status.HTTP_200_OK)
