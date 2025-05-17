@@ -1,0 +1,211 @@
+/* BatchReportProcessor.css */
+
+.batch-processor {
+  position: relative;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 10px !important;
+  overflow: hidden;
+}
+
+.batch-processor .card-header {
+  background: linear-gradient(135deg, #0d6efd, #0a58ca) !important;
+  border: none;
+  padding: 15px 20px;
+}
+
+.batch-processor-body {
+  padding: 25px;
+  background-color: #f8f9fa;
+}
+
+.batch-intro {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.batch-icon {
+  font-size: 2.5rem;
+  color: #0d6efd;
+  margin-bottom: 15px;
+}
+
+.batch-progress {
+  height: 12px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background-color: #e9ecef;
+}
+
+.batch-progress .progress-bar {
+  background: linear-gradient(90deg, #0d6efd, #0a58ca);
+}
+
+.email-textarea {
+  font-family: monospace;
+  resize: vertical;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  padding: 12px;
+  transition: all 0.3s ease;
+}
+
+.blue-focus:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.report-list {
+  max-height: 300px;
+  overflow-y: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.report-item {
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+  padding: 12px 15px;
+}
+
+.report-item:hover {
+  background-color: #f0f7ff;
+  border-left-color: #0d6efd;
+}
+
+.report-item .download-btn {
+  opacity: 0.8;
+  transition: all 0.2s;
+  border-radius: 4px;
+}
+
+.report-item:hover .download-btn {
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+.current-processing-container {
+  background-color: #f0f7ff;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.current-processing {
+  border-left: 4px solid #0d6efd;
+  background-color: white;
+  border-radius: 8px !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.processed-reports-container {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.batch-summary {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid #0d6efd;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.summary-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.summary-label {
+  font-weight: 500;
+  color: #495057;
+}
+
+.summary-value {
+  font-weight: 600;
+  color: #0d6efd;
+}
+
+.summary-value.success {
+  color: #198754;
+}
+
+.summary-value.error {
+  color: #dc3545;
+}
+
+.batch-processing-header {
+  text-align: center;
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Animation for processing */
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(13, 110, 253, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0); }
+}
+
+.processing-animation {
+  animation: pulse 2s infinite;
+}
+
+/* Button styling */
+.btn-primary {
+  background: linear-gradient(135deg, #0d6efd, #0a58ca);
+  border: none;
+  box-shadow: 0 2px 5px rgba(13, 110, 253, 0.3);
+  transition: all 0.3s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(13, 110, 253, 0.4);
+}
+
+.btn-outline-secondary {
+  border-color: #6c757d;
+  color: #6c757d;
+  transition: all 0.3s;
+}
+
+.btn-outline-secondary:hover {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-outline-warning {
+  border-color: #ffc107;
+  color: #ffc107;
+  transition: all 0.3s;
+}
+
+.btn-outline-warning:hover {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #198754, #157347);
+  border: none;
+  box-shadow: 0 2px 5px rgba(25, 135, 84, 0.3);
+  transition: all 0.3s;
+}
+
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(25, 135, 84, 0.4);
+}

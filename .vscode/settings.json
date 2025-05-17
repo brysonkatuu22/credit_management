@@ -1,0 +1,13 @@
+{
+    "cSpell.words": [
+        "BOTTOMPADDING",
+        "ebho",
+        "FONTNAME",
+        "FONTSIZE",
+        "pagesizes",
+        "whitesmoke"
+    ],
+    "python.analysis.extraPaths": [
+        "./credit_project"
+    ]
+}
