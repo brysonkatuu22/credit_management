@@ -575,7 +575,7 @@ const SimplifiedFinancialForm = ({ onCreditScoreCalculated }) => {
           <Card.Body className="p-5 text-center">
             <div className="mb-4">
               <FiInfo size={48} className="text-primary mb-3" />
-              <h4>Loan Information Required</h4>
+              <h4>Loan Information Required</h4> {/* Added comment for Git tracking */}
               <p className="text-muted mb-4">
                 To display your financial details and calculate your credit score, please add at least one loan account first.
                 This helps us provide a more accurate assessment of your financial health.
