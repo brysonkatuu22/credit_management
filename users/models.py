@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
@@ -10,7 +11,7 @@ class CustomUserManager(BaseUserManager):
         """Create and return a regular user with an email and password."""
         if not email:
             raise ValueError(_("The Email field must be set"))
-
+        
         email = self.normalize_email(email)
         extra_fields.setdefault("is_active", True)
         user = self.model(email=email, **extra_fields)
@@ -26,7 +27,7 @@ class CustomUserManager(BaseUserManager):
             raise ValueError(_("Superuser must have is_staff=True."))
         if extra_fields.get("is_superuser") is not True:
             raise ValueError(_("Superuser must have is_superuser=True."))
-
+        
         return self.create_user(email, password, **extra_fields)
 
 
@@ -41,7 +42,6 @@ class CustomUser(AbstractUser, PermissionsMixin):
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    is_admin = models.BooleanField(default=False, verbose_name=_("Admin User"))
 
     objects = CustomUserManager()
 
@@ -50,3 +50,30 @@ class CustomUser(AbstractUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+    
+
+#Sentiment analysis user form response
+    
+User = get_user_model()
+
+class UserResponse(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Associate with the custom user model
+    response_text = models.TextField()  # Store the user's response to a sentiment-related question
+    sentiment_score = models.FloatField()  # Store the sentiment intensity score
+    ordinal_sentiment = models.CharField(max_length=50)  # Store ordinal sentiment like "Very Positive"
+    created_at = models.DateTimeField(auto_now_add=True)  # Track when the response was created
+
+    def __str__(self):
+        return f"Response by {self.user.email} - {self.ordinal_sentiment}"    
+
+User = get_user_model()
+
+class UserSentimentScoreHistory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    average_intensity_score = models.FloatField()
+    average_ordinal_sentiment = models.CharField(max_length=20)
+    personal_sentiment_score = models.FloatField()  # Normalized score (0-1)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.email} - {self.created_at}"
