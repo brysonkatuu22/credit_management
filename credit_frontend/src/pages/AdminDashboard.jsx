@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Header from '../components/Header';
 import AdminReportAutomation from '../components/AdminReportAutomation';
-import BatchReportProcessor from '../components/BatchReportProcessor';
+import BasicBatchProcessor from '../components/BasicBatchProcessor';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -23,6 +23,7 @@ const AdminDashboard = () => {
   const [showBatchProcessor, setShowBatchProcessor] = useState(false);
   const [batchResults, setBatchResults] = useState([]);
   const [activeUsersCount, setActiveUsersCount] = useState(0);
+  const [reportsGeneratedCount, setReportsGeneratedCount] = useState(0);
 
   // Check if user is admin and fetch active users count
   useEffect(() => {
@@ -36,6 +37,23 @@ const AdminDashboard = () => {
 
     // Fetch active users count
     fetchActiveUsersCount();
+
+    // Check if there's a batch processing message
+    const batchMessage = localStorage.getItem('batchProcessingMessage');
+    if (batchMessage) {
+      setSuccess(batchMessage);
+      localStorage.removeItem('batchProcessingMessage');
+    }
+
+    // Load reports generated count from localStorage
+    try {
+      const count = localStorage.getItem('adminReportsGeneratedCount');
+      if (count) {
+        setReportsGeneratedCount(parseInt(count, 10));
+      }
+    } catch (err) {
+      console.error('Error loading reports count:', err);
+    }
   }, [navigate]);
 
   // Function to fetch active users count
@@ -142,6 +160,16 @@ const AdminDashboard = () => {
 
       setReportUrl(response.data.report_url);
       setSuccess(`Report for ${selectedUser.email} generated successfully`);
+
+      // Update reports generated count
+      try {
+        const currentCount = parseInt(localStorage.getItem('adminReportsGeneratedCount') || '0', 10);
+        const newCount = currentCount + 1;
+        localStorage.setItem('adminReportsGeneratedCount', newCount.toString());
+        setReportsGeneratedCount(newCount);
+      } catch (err) {
+        console.error('Error updating reports count:', err);
+      }
     } catch (err) {
       console.error('Error generating report:', err);
       setError(err.response?.data?.error || 'Failed to generate report');
@@ -163,13 +191,22 @@ const AdminDashboard = () => {
               </p>
             </div>
             <div className="admin-dashboard-stats d-none d-md-flex">
-              <div className="admin-stat-card">
+              <div className="admin-stat-card me-3">
                 <div className="stat-icon">
                   <i className="fas fa-users"></i>
                 </div>
                 <div className="stat-content">
                   <h3>Active Users</h3>
                   <p className="stat-value">{activeUsersCount || 'N/A'}</p>
+                </div>
+              </div>
+              <div className="admin-stat-card">
+                <div className="stat-icon">
+                  <i className="fas fa-file-alt"></i>
+                </div>
+                <div className="stat-content">
+                  <h3>Reports Generated</h3>
+                  <p className="stat-value">{reportsGeneratedCount || '0'}</p>
                 </div>
               </div>
             </div>
@@ -198,11 +235,10 @@ const AdminDashboard = () => {
         </div>
 
         {showBatchProcessor ? (
-          <BatchReportProcessor
+          <BasicBatchProcessor
             onComplete={(results) => {
-              setBatchResults(results);
-              setShowBatchProcessor(false);
-              setSuccess(`Successfully processed ${results.filter(r => r.status === 'success').length} out of ${results.length} reports`);
+              // Just reload the page to show updated counts and the success message
+              window.location.reload();
             }}
             onCancel={() => setShowBatchProcessor(false)}
           />
@@ -309,6 +345,16 @@ const AdminDashboard = () => {
                             setIsAutomating(false);
                             setSuccess(`Report for ${result.user.email} generated and downloaded successfully`);
                             setReportUrl(result.reportUrl);
+
+                            // Update reports generated count
+                            try {
+                              const currentCount = parseInt(localStorage.getItem('adminReportsGeneratedCount') || '0', 10);
+                              const newCount = currentCount + 1;
+                              localStorage.setItem('adminReportsGeneratedCount', newCount.toString());
+                              setReportsGeneratedCount(newCount);
+                            } catch (err) {
+                              console.error('Error updating reports count:', err);
+                            }
                           }}
                           onError={(errorMsg) => {
                             setIsAutomating(false);
