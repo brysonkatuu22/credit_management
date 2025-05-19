@@ -199,10 +199,6 @@ const BasicBatchProcessor = ({ onComplete, onCancel }) => {
         errorCount: errorCount
       });
       localStorage.setItem('batchReportHistory', JSON.stringify(history.slice(0, 10)));
-
-      // Store a success message in localStorage for the parent to display
-      localStorage.setItem('batchProcessingMessage',
-        `Successfully processed ${successCount} out of ${results.length} reports`);
     } catch (err) {
       console.error('Error saving batch history:', err);
     }
@@ -211,6 +207,17 @@ const BasicBatchProcessor = ({ onComplete, onCancel }) => {
     if (onComplete) {
       onComplete(results);
     }
+  };
+
+  // Reset the processor to start a new batch
+  const resetProcessor = () => {
+    setUserEmails('');
+    setEmailList([]);
+    setResults([]);
+    setCurrentIndex(-1);
+    setIsProcessing(false);
+    setProgress(0);
+    setError('');
   };
 
   // Cancel batch processing
@@ -226,7 +233,7 @@ const BasicBatchProcessor = ({ onComplete, onCancel }) => {
         <h5 className="mb-0">Batch Report Generation</h5>
       </Card.Header>
       <Card.Body className="batch-processor-body">
-        {!isProcessing ? (
+        {!isProcessing && results.length === 0 ? (
           <>
             <div className="batch-intro">
               <div className="batch-icon mb-3">
@@ -274,6 +281,91 @@ const BasicBatchProcessor = ({ onComplete, onCancel }) => {
               >
                 <i className="fas fa-play me-2"></i>
                 Start Batch Processing
+              </Button>
+            </div>
+          </>
+        ) : !isProcessing && results.length > 0 ? (
+          <>
+            <div className="batch-complete-header mb-4">
+              <div className="d-flex align-items-center mb-3">
+                <div className="batch-success-icon me-3">
+                  <i className="fas fa-check-circle"></i>
+                </div>
+                <div>
+                  <h5 className="text-success mb-1">Batch Processing Complete</h5>
+                  <p className="text-muted mb-0">
+                    Successfully processed {results.filter(r => r.status === 'success').length} out of {results.length} reports
+                  </p>
+                </div>
+              </div>
+
+              <Alert variant="success" className="mb-3">
+                <i className="fas fa-info-circle me-2"></i>
+                All reports have been downloaded automatically. You can also download them again by clicking the download buttons below.
+              </Alert>
+            </div>
+
+            {/* Results list */}
+            <div className="mb-4 processed-reports-container">
+              <h6 className="text-primary">Processed Reports:</h6>
+              <ListGroup className="report-list">
+                {results.map((result, index) => (
+                  <ListGroup.Item
+                    key={index}
+                    className="d-flex justify-content-between align-items-center report-item"
+                  >
+                    <div>
+                      <span className="fw-bold">{result.email}</span>
+                      {result.status === 'success' && result.user && (
+                        <span className="text-muted ms-2 small">
+                          ({result.user.first_name} {result.user.last_name})
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      {result.status === 'success' ? (
+                        <>
+                          <Badge bg="success" className="me-2">Success</Badge>
+                          {result.downloaded ? (
+                            <Badge bg="info">
+                              <i className="fas fa-check me-1"></i> Downloaded
+                            </Badge>
+                          ) : (
+                            <a
+                              href={`http://127.0.0.1:8000${result.reportUrl}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn btn-sm btn-outline-primary download-btn"
+                            >
+                              <i className="fas fa-download me-1"></i> Download
+                            </a>
+                          )}
+                        </>
+                      ) : (
+                        <Badge bg="danger">Failed</Badge>
+                      )}
+                    </div>
+                  </ListGroup.Item>
+                ))}
+              </ListGroup>
+            </div>
+
+            <div className="d-flex justify-content-end gap-2">
+              <Button
+                variant="outline-secondary"
+                onClick={onCancel}
+                className="px-4"
+              >
+                <i className="fas fa-arrow-left me-2"></i>
+                Back to Dashboard
+              </Button>
+              <Button
+                variant="primary"
+                onClick={resetProcessor}
+                className="px-4"
+              >
+                <i className="fas fa-plus me-2"></i>
+                Process New Batch
               </Button>
             </div>
           </>

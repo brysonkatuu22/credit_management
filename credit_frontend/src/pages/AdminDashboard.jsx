@@ -237,8 +237,21 @@ const AdminDashboard = () => {
         {showBatchProcessor ? (
           <BasicBatchProcessor
             onComplete={(results) => {
-              // Just reload the page to show updated counts and the success message
-              window.location.reload();
+              // Update the batch results and show success message
+              setBatchResults(results);
+
+              // Update the reports generated count without reloading
+              const count = localStorage.getItem('adminReportsGeneratedCount');
+              if (count) {
+                setReportsGeneratedCount(parseInt(count, 10));
+              }
+
+              // Show success message
+              const successCount = results.filter(r => r.status === 'success').length;
+              setSuccess(`Successfully processed ${successCount} out of ${results.length} reports`);
+
+              // Keep the batch processor visible to show results
+              // Do NOT reload the page or hide the processor
             }}
             onCancel={() => setShowBatchProcessor(false)}
           />
