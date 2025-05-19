@@ -6,7 +6,8 @@ This module provides Robotic Process Automation (RPA) for generating credit loan
 
 - Automated generation of credit loan reports for all users or specific user groups
 - Scheduled report generation at configurable times
-- Email distribution of generated reports
+- Email distribution of generated reports with professional HTML templates
+- Automatic attachment of PDF credit reports to emails
 - Windows service integration for continuous operation
 - Command-line interface for manual execution
 
@@ -74,6 +75,7 @@ The following environment variables can be configured in the `.env` file:
 - `SMTP_USERNAME`: SMTP username
 - `SMTP_PASSWORD`: SMTP password
 - `SENDER_EMAIL`: Email address to send reports from
+- `COMPANY_NAME`: Company name to use in email templates (default: Fintrack Solutions)
 
 ## Integration with Django
 
@@ -82,6 +84,17 @@ This RPA module integrates with the Django project by:
 1. Setting up the Django environment
 2. Using the existing `generate_pdf_report` function from `credit_report.utils`
 3. Accessing user and loan data through Django models
+4. Storing report generation records in the `CreditReportRequest` model
+
+## Email Templates
+
+The email system includes:
+
+1. Professional HTML email templates with responsive design
+2. Plain text fallback for email clients that don't support HTML
+3. Personalized greeting with the user's name when available
+4. Automatic attachment of the PDF credit report
+5. Company branding and styling customization through environment variables
 
 ## Logs
 

@@ -5,6 +5,7 @@
         "FONTNAME",
         "FONTSIZE",
         "pagesizes",
+        "tgqj",
         "whitesmoke"
     ],
     "python.analysis.extraPaths": [

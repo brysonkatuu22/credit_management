@@ -25,6 +25,8 @@ from django.contrib.auth import get_user_model
 from credit_report.utils import generate_pdf_report
 from django.conf import settings
 from loan.models import LoanAccount
+from credit_report.models import CreditReportRequest
+from rpa_automation.email_utils import send_report_email, send_batch_report_emails
 
 # Create logs directory if it doesn't exist
 logs_dir = os.path.join(BASE_DIR, 'logs')
@@ -93,6 +95,9 @@ def generate_reports_batch(criteria=None, email_reports=False):
     Args:
         criteria (str): User selection criteria ('all', 'active_loans', 'due_loans')
         email_reports (bool): Whether to email reports to users
+
+    Returns:
+        tuple: (success_count, error_count)
     """
     ensure_directories()
 
@@ -102,6 +107,11 @@ def generate_reports_batch(criteria=None, email_reports=False):
     reports_dir = os.path.join(settings.MEDIA_ROOT, "reports")
     success_count = 0
     error_count = 0
+    email_success = 0
+    email_error = 0
+
+    # List to store user-report pairs for batch email sending
+    user_report_pairs = []
 
     for user in users:
         try:
@@ -112,18 +122,56 @@ def generate_reports_batch(criteria=None, email_reports=False):
 
             # Generate the report
             generate_pdf_report(user, file_path)
+
+            # Create a record in the CreditReportRequest model
+            report_request = CreditReportRequest(user=user)
+
+            # Save the file path to the model
+            with open(file_path, 'rb') as f:
+                from django.core.files.base import ContentFile
+                report_request.report_file.save(filename, ContentFile(f.read()), save=True)
+
+            # Save the record
+            report_request.save()
+
             logger.info(f"Successfully generated report for user: {user.email}")
             success_count += 1
 
-            # TODO: Implement email functionality if email_reports is True
+            # Add to the list for email sending if requested
             if email_reports:
-                logger.info(f"Would email report to {user.email} (not implemented yet)")
+                user_report_pairs.append((user, file_path))
 
         except Exception as e:
             logger.error(f"Failed to generate report for user {user.email}: {str(e)}")
             error_count += 1
 
+    # Send emails if requested
+    if email_reports and user_report_pairs:
+        logger.info(f"Sending {len(user_report_pairs)} emails with credit reports...")
+
+        # Send emails individually for better error tracking
+        for user, report_path in user_report_pairs:
+            try:
+                # Get user's full name if available
+                user_name = f"{user.first_name} {user.last_name}".strip() if hasattr(user, 'first_name') else None
+
+                # Send the email
+                if send_report_email(user.email, report_path, user_name):
+                    email_success += 1
+                    logger.info(f"Successfully sent credit report email to {user.email}")
+                else:
+                    email_error += 1
+                    logger.error(f"Failed to send credit report email to {user.email}")
+            except Exception as e:
+                email_error += 1
+                logger.error(f"Error sending email to {user.email}: {str(e)}")
+
+        logger.info(f"Email sending completed. Success: {email_success}, Errors: {email_error}")
+
     logger.info(f"Batch report generation completed. Success: {success_count}, Errors: {error_count}")
+    if email_reports:
+        logger.info(f"Email sending results: Success: {email_success}, Errors: {email_error}")
+
     return success_count, error_count
 
 def schedule_daily_reports():
