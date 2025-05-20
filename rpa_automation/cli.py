@@ -32,7 +32,7 @@ from rpa_automation.report_generator import (
 
 # Import the Windows service installer
 try:
-    from rpa_automation.windows_service import CreditReportService
+    from rpa_automation.windows_service import ReportGeneratorService
     import win32serviceutil
     WINDOWS_SERVICE_AVAILABLE = True
 except ImportError:
@@ -89,7 +89,7 @@ def main():
     elif args.command == 'install-service' and WINDOWS_SERVICE_AVAILABLE:
         logger.info("Installing Windows service")
         try:
-            win32serviceutil.HandleCommandLine(CreditReportService)
+            win32serviceutil.HandleCommandLine(ReportGeneratorService)
         except Exception as e:
             logger.error(f"Failed to install service: {str(e)}")
 

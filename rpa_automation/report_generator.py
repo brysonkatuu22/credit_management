@@ -175,23 +175,40 @@ def generate_reports_batch(criteria=None, email_reports=False):
     return success_count, error_count
 
 def schedule_daily_reports():
-    """Schedule daily report generation at a specific time"""
-    # Get time from environment variable or use default (2 AM)
-    report_time = os.getenv('REPORT_GENERATION_TIME', '02:00')
+    """Schedule report generation for testing (every 5 minutes)"""
+    # For testing purposes, we'll run every 5 minutes instead of at a specific time
 
-    # Schedule the job
-    schedule.every().day.at(report_time).do(
+    # First, run immediately for testing
+    logger.info("Running initial report generation immediately for testing...")
+    try:
+        generate_reports_batch(criteria='all', email_reports=True)
+        logger.info("Initial report generation completed successfully")
+    except Exception as e:
+        logger.error(f"Error in initial report generation: {str(e)}")
+
+    # Schedule the job to run every 5 minutes
+    schedule.every(5).minutes.do(
         generate_reports_batch,
-        criteria='active_loans',
+        criteria='all',
         email_reports=True
     )
 
-    logger.info(f"Scheduled daily report generation at {report_time}")
+    logger.info("Scheduled report generation every 5 minutes for testing")
+    logger.info("Reports will be generated and emails will be sent every 5 minutes")
+    logger.info("Press Ctrl+C to stop the service")
 
     # Keep the script running
+    counter = 0
     while True:
-        schedule.run_pending()
-        time.sleep(60)  # Check every minute
+        try:
+            schedule.run_pending()
+            counter += 1
+            if counter % 10 == 0:  # Log every 10 iterations
+                logger.info(f"Service still running... ({counter} iterations)")
+            time.sleep(10)  # Check every 10 seconds
+        except Exception as e:
+            logger.error(f"Error in schedule loop: {str(e)}")
+            time.sleep(10)  # Continue despite errors
 
 def generate_reports_for_all_users():
     """Generate reports for all users (one-time run)"""
